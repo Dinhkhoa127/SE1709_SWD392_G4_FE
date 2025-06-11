@@ -24,11 +24,12 @@ body {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
   transition: margin-left 0.3s ease;
-  padding-top: 80px;
+   padding-top: 70px;
 }
 
 .main-content.collapsed {
   margin-left: 80px;
+   padding-top: 70px;
 }
 
 .content-area {
@@ -71,6 +72,18 @@ body {
 .content-card:hover {
   box-shadow: 0 8px 32px rgba(74, 124, 89, 0.16);
   transform: translateY(-4px) scale(1.02);
+}
+
+.content-card.highlight {
+  box-shadow:
+    0 0 0 5px #ffb300, /* viền vàng cam nổi bật */
+    0 8px 40px 0 #ffb30055, /* bóng vàng cam mờ */
+    0 2px 32px rgba(76,175,80,0.18);
+  border-radius: 20px;
+  transform: scale(1.04) translateY(-6px);
+  z-index: 10;
+  position: relative;
+  transition: box-shadow 0.3s, transform 0.3s;
 }
 
 .card-header {
@@ -325,7 +338,8 @@ body {
 }
 
 .stat-grid {
- display: flex;
+  display: grid;
+   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-bottom: 32px;
   flex-wrap: wrap;
@@ -374,6 +388,57 @@ body {
   box-shadow: 0 8px 32px rgba(74,124,89,0.22);
   transform: translateY(-6px) scale(1.04);
   background: linear-gradient(135deg, #b2f7ef 0%, #e0e7ff 100%);
+}
+
+/* Decorative Leaves for AdminPage */
+.admin-decorative-leaves {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  top: 0;
+  left: 0;
+}
+
+.admin-deco-leaf {
+  position: absolute;
+  font-size: 2.5rem;
+  opacity: 0.25;
+  animation: adminLeafFloat 12s ease-in-out infinite;
+}
+
+.admin-leaf-1 {
+  left: 10vw;
+  top: 12vh;
+  animation-delay: 0s;
+}
+.admin-leaf-2 {
+  left: 10vw;
+  bottom: 18vh;
+  animation-delay: 3s;
+}
+.admin-leaf-3 {
+  right: 2vw;
+  top: 18vh;
+  animation-delay: 6s;
+}
+.admin-leaf-4 {
+  right: 3vw;
+  bottom: 10vh;
+  animation-delay: 9s;
+}
+
+@keyframes adminLeafFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-18px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(12px) rotate(240deg);
+  }
 }
 
 /* Responsive Design */

@@ -6,8 +6,8 @@ import '../styles/AdminPage.css';
 const ArticlesPage = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [articles] = useState([
-    { id: 1, title: 'Quang hợp ở thực vật', author: 'Nguyễn Văn A', date: '2024-02-10', status: 'published' },
-    { id: 2, title: 'Tế bào động vật', author: 'Trần Thị B', date: '2024-02-12', status: 'draft' }
+    { article_id: 1, title: 'Quang hợp ở thực vật', CreatedBy: 'Nguyễn Văn A', CreatedDate: '2024-02-10', ModifiedBy: 'Nguyễn Văn A', ModifiedDate: '2024-02-11', status: 'published' },
+    { article_id: 2, title: 'Tế bào động vật', CreatedBy: 'Trần Thị B', CreatedDate: '2024-02-12', ModifiedBy: 'Trần Thị B', ModifiedDate: '2024-02-13', status: 'draft' }
   ]);
 
   return (
@@ -17,7 +17,7 @@ const ArticlesPage = () => {
         rel="stylesheet" 
       />
       <div className={`admin-container${isCollapsed ? ' sidebar-hidden' : ''}`}>
-        <Navbar activeSection="articles" isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
+        <Navbar activeSection="articles" isCollapsed={isCollapsed} />
         <Header activeSection="articles" isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
@@ -35,19 +35,22 @@ const ArticlesPage = () => {
                 <thead>
                   <tr>
                     <th>Tiêu đề</th>
-                    <th>Tác giả</th>
+                    <th>Người tạo</th>
                     <th>Ngày tạo</th>
+                    <th>Người sửa cuối</th>
+                    <th>Ngày sửa cuối</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {articles.map(article => (
-                    <tr key={article.id}>
-                     
+                    <tr key={article.article_id}>
                       <td>{article.title}</td>
-                      <td>{article.author}</td>
-                      <td>{article.date}</td>
+                      <td>{article.CreatedBy}</td>
+                      <td>{article.CreatedDate}</td>
+                      <td>{article.ModifiedBy}</td>
+                      <td>{article.ModifiedDate}</td>
                       <td>
                         <span className={`status-badge ${article.status === 'published' ? 'status-active' : 'status-inactive'}`}>
                           {article.status === 'published' ? 'Published' : 'Draft'}

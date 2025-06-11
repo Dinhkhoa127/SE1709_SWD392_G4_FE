@@ -1,0 +1,85 @@
+.delete-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(244,67,54,0.18), 0 0 0 3px #f44336;
+  padding: 32px 36px 24px 36px;
+  min-width: 340px;
+  max-width: 95vw;
+  position: relative;
+  text-align: center;
+}
+
+.delete-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  cursor: pointer;
+}
+
+.delete-modal-icon {
+  color: #f44336;
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+}
+
+.delete-modal-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #c62828;
+  margin-bottom: 10px;
+}
+
+.delete-modal-message {
+  color: #444;
+  margin-bottom: 22px;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.btn.btn-cancel {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn.btn-cancel:hover {
+  background: #bdbdbd;
+}
+
+.btn.btn-danger {
+  background: #f44336;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn.btn-danger:hover {
+  background: #c62828;
+}

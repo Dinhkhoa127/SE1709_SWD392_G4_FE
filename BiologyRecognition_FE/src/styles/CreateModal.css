@@ -1,0 +1,142 @@
+.create-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.18);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-modal-content {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 40px rgba(76,175,80,0.18), 0 0 0 3px #4caf50;
+  padding: 32px 40px 24px 40px;
+  min-width: 600px;
+  max-width: 700px;
+  width: 100%;
+  animation: modalFadeIn 0.25s;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.create-modal .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  cursor: pointer;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-30px);}
+  to   { opacity: 1; transform: translateY(0);}
+}
+
+.create-modal-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: #388e3c;
+  text-align: center;
+}
+
+.create-modal-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 32px;
+  margin-bottom: 18px;
+}
+
+.create-modal-form .form-group {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.create-modal-form .form-group.full-width {
+  grid-column: 1 / span 2;
+}
+
+.create-modal .action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Đảm bảo label và input cùng chiều cao, căn giữa */
+.create-modal-form .form-group label {
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+  color: #2d3748;
+}
+
+.create-modal-form input,
+.create-modal-form textarea,
+.create-modal-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #bdbdbd;
+  background: #f8fafc;
+  font-size: 1rem;
+  margin-bottom: 0;
+  box-sizing: border-box;
+  color: #222;
+}
+
+.create-modal-form select {
+  height: 40px;
+  background: #f8fafc;
+}
+
+/* Style cho input date đồng bộ với input thường */
+.create-modal-form input[type="date"] {
+  height: 40px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #bdbdbd;
+  background: #f8fafc;
+  color: #222;
+  box-sizing: border-box;
+  
+}
+
+.create-modal-form input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 1;
+}
+
+.create-modal .btn-primary {
+  background: #43a047;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.create-modal .btn-primary:hover {
+  background: #388e3c;
+}
+
+.create-modal .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  cursor: pointer;
+}

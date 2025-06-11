@@ -9,14 +9,15 @@
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   position: fixed;
   top: 0;
-  left: 280px; /* Adjust based on your layout */
+  left: 0; /* Adjust based on your layout */
   right: 0;
   z-index: 100;
   transition: left 0.3s ease;
+   padding-left: 280px;
 }
 
 .top-bar.collapsed {
-  left: 80px; /* Adjust based on your layout */
+  padding-left: 80px;/* Adjust based on your layout */
 }
 
 .breadcrumb {
@@ -132,6 +133,7 @@
 .toggle-btn {
   position: static;
   margin-right: 8px;
+  margin-left: 16px;
    background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #66BB6A 100%);
   border: 2px solid #fff;
   border-radius: 8px;
