@@ -1,0 +1,174 @@
+/* Header Styles */
+.top-bar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 15px 20px; /* Adjusted padding for a more compact look */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 280px; /* Adjust based on your layout */
+  right: 0;
+  z-index: 100;
+  transition: left 0.3s ease;
+}
+
+.top-bar.collapsed {
+  left: 80px; /* Adjust based on your layout */
+}
+
+.breadcrumb {
+  color: #4a5568;
+  font-size: 16px; /* Increased font size for better readability */
+  font-weight: 500;
+}
+
+.breadcrumb-main {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  position: relative; /* Needed for dropdown positioning */
+  gap: 15px; /* Added gap for better spacing */
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+ background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #66BB6A 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.user-avatar:hover {
+  background: #4a7c59;
+  transform: scale(1.05);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%; /* Position below the avatar */
+  right: 0; /* Align to the right */
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* Ensure it appears above other elements */
+}
+
+.dropdown-item {
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  color: #333;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s ease; /* Smooth background transition */
+}
+
+.dropdown-item i {
+  margin-right: 10px; /* Space between icon and text */
+}
+
+.dropdown-item:hover {
+  background: #f0f0f0; /* Highlight on hover */
+}
+
+.user-name {
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.notification-icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(74, 124, 89, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a7c59;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-icon:hover {
+  background: rgba(74, 124, 89, 0.2);
+  transform: scale(1.05);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: #e53e3e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  border: 2px solid white;
+}
+
+.toggle-btn {
+  position: static;
+  margin-right: 8px;
+   background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #66BB6A 100%);
+  border: 2px solid #fff;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.toggle-btn:hover {
+  background: #4a7c59;
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .top-bar {
+    left: 0 !important;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .breadcrumb {
+    font-size: 12px;
+  }
+}

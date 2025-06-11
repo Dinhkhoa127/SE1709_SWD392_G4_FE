@@ -1,0 +1,288 @@
+/* Navbar Styles */
+.sidebar {
+  width: 280px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 25px 20px;
+  background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #66BB6A 100%); /* Đồng bộ với login background */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.sidebar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+/* Logo đồng bộ với login page - với viền như app mobile */
+.logo {
+   width: 28px; /* Chiều rộng điện thoại */
+  height: 44px; /* Chiều cao điện thoại (tỷ lệ phone thực tế) */
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 8px; /* Bo góc giống điện thoại */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem; /* Icon lá size nhỏ hơn */
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.logo::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 4px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: none;
+}
+
+/* Thêm nút home dưới đáy */
+.logo::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+}
+
+/* Thêm effect khi hover giống app mobile */
+.logo:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.logo:hover {
+  transform: scale(1.05); /* Đồng bộ hover effect với login */
+}
+
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 600;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+  white-space: nowrap;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Đồng bộ text shadow với login */
+}
+
+.sidebar.collapsed .sidebar-title {
+  opacity: 0;
+}
+
+.nav-menu {
+  padding: 20px 0;
+  flex: 1;
+}
+
+.nav-item {
+  margin: 5px 15px;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  color: #4a5568;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  pointer-events: auto;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-link:hover {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32); /* Đồng bộ với login button gradient */
+  color: white;
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2); /* Thêm shadow nhẹ khi hover */
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32); /* Đồng bộ với login button gradient */
+  color: white;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); /* Shadow cho active state */
+}
+
+.nav-icon {
+  width: 20px;
+  margin-right: 15px;
+  text-align: center;
+}
+
+.nav-text {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .nav-text {
+  opacity: 0;
+}
+
+/* Responsive logo cho mobile */
+@media (max-width: 768px) {
+  .sidebar {
+    left: -280px;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.collapsed {
+    left: 0;
+  }
+  
+  /* Logo rectangle trên mobile với viền app-style */
+  .logo {
+   width: 24px;
+    height: 36px; /* Tỷ lệ phone nhỏ hơn trên mobile */
+    border-radius: 6px;
+    font-size: 0.7rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 
+      0 0 0 0.5px rgba(255, 255, 255, 0.1),
+      0 1px 4px rgba(0, 0, 0, 0.1),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.2);
+  }
+  
+ .logo::after {
+    width: 6px;
+    height: 1.5px;
+    bottom: -1.5px;
+  }
+  
+  .logo:hover {
+    box-shadow: 
+      0 0 0 0.5px rgba(255, 255, 255, 0.2),
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Variant 2: Điện thoại với viền screen */
+.logo-variant-2 {
+  width: 28px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.1); /* Viền screen bên trong */
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Variant 3: Điện thoại với góc cong nhiều hơn (iPhone style) */
+.logo-variant-3 {
+  width: 26px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 12px; /* Bo góc nhiều hơn */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.logo-variant-3::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 6px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: none;
+}
+  
+  .sidebar-title {
+    font-size: 16px;
+  }
+
+
+.sidebar.hidden {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.admin-container.sidebar-hidden .main-content,
+.admin-container.sidebar-hidden .top-bar {
+  left: 0 !important;
+  width: 100% !important;
+}
