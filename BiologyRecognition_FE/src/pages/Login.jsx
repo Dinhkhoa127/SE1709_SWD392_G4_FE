@@ -1,23 +1,57 @@
 // src/components/Login.js
 import React, { useState } from 'react';
 import '../styles/Login.css';
-
+import { loginAPI, loginGoogleAPI } from '../redux/services/apiService';
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
-    const handleSubmit = async (e) => {
+    const [error, setError] = useState('');
+const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        
-        // Simulate login process
-        setTimeout(() => {
-            console.log('Đăng nhập với:', { username, password });
+        setError('');
+
+        try {
+            const response = await loginAPI(username, password);
+            console.log(response);
+            if (response.status === 200) {
+                console.log('Đăng nhập thành công:', response);
+
+            } else {
+                setError(response.message);
+            }
+        } catch (error) {
+            console.error('Đăng nhập thất bại:', error);
+            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+        } finally {
             setIsLoading(false);
-        }, 1500);
+        }
     };
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const response = await loginGoogleAPI();
+            console.log(response);
+            if (response.status === 200) {
+                console.log('Đăng nhập Google thành công:', response);
+                // Tiến hành redirect hoặc cập nhật trạng thái, ví dụ:
+                // localStorage.setItem('token', response.data.token); // Lưu token vào localStorage
+                // redirectToDashboard();
+            } else {
+                setError(response.message);
+            }
+        } catch (error) {
+            console.error('Đăng nhập Google thất bại:', error);
+            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     return (
         <>
@@ -151,7 +185,8 @@ const Login = () => {
                     </div>
 
                     <div className="alternative-login">
-                        <button className="alt-btn google-btn">
+                        <button className="alt-btn google-btn " onClick={handleGoogleLogin} disabled={isLoading}>
+                            {isLoading && <i className="fas fa-spinner fa-spin"></i>}
                             <i className="fab fa-google"></i>
                             Đăng nhập với Google
                         </button>
