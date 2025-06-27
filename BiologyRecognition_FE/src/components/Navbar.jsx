@@ -7,7 +7,7 @@ const Navbar = ({ activeSection, isCollapsed }) => {
 
   // Navigation items with id, icon, and text
   const navItems = [
-  { id: 'dashboard', icon: 'fa fa-bar-chart', text: 'Tổng hợp', path: '/' },
+  { id: 'dashboard', icon: 'fa fa-bar-chart', text: 'Tổng hợp', path: '/admin' },
     { id: 'subjects', icon: 'fas fa-book', text: 'Môn học', path: '/subjects' },
       { id: 'topics', icon: 'fas fa-tags', text: 'Chủ đề', path: '/topics' },
     { id: 'chapters', icon: 'fas fa-bookmark', text: 'Chương', path: '/chapters' },

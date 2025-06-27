@@ -1,8 +1,14 @@
 // src/components/Login.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { fetchCurrentUserSuccess } from '../redux/actions/userActions';
 import '../styles/Login.css';
 import { loginAPI, loginGoogleAPI } from '../redux/services/apiService';
+
 const Login = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -15,12 +21,24 @@ const handleSubmit = async (e) => {
 
         try {
             const response = await loginAPI(username, password);
-            console.log(response);
-            if (response.status === 200) {
+            console.log('Full response:', response);
+            
+            // Kiểm tra response dựa trên structure thực tế từ API
+            if (response && response.userAccountId) {
                 console.log('Đăng nhập thành công:', response);
-
+                
+                // Lưu thông tin user vào Redux store
+                dispatch(fetchCurrentUserSuccess(response));
+                
+                // Chuyển trang về AdminPage sau khi login thành công
+                console.log('Attempting to navigate to /admin');
+                navigate('/admin', { replace: true });
+                // Backup method nếu navigate không hoạt động
+                setTimeout(() => {
+                    window.location.href = '/admin';
+                }, 100);
             } else {
-                setError(response.message);
+                setError('Đăng nhập thất bại - Thông tin không hợp lệ');
             }
         } catch (error) {
             console.error('Đăng nhập thất bại:', error);
@@ -39,9 +57,8 @@ const handleSubmit = async (e) => {
             console.log(response);
             if (response.status === 200) {
                 console.log('Đăng nhập Google thành công:', response);
-                // Tiến hành redirect hoặc cập nhật trạng thái, ví dụ:
-                // localStorage.setItem('token', response.data.token); // Lưu token vào localStorage
-                // redirectToDashboard();
+                // Chuyển trang về AdminPage sau khi login Google thành công
+                navigate('/admin');
             } else {
                 setError(response.message);
             }

@@ -3,12 +3,21 @@ import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 
 const ArtifactImagesPage = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Lấy trạng thái collapsed từ localStorage, mặc định là false
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('navbarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [images] = useState([
     { image_id: 1, artifact: 'Lá cây đa', name: 'Ảnh lá cây đa', url: '/images/la-cay-da.jpg', description: 'Ảnh mẫu vật lá cây đa' }
   ]);
 
-  const handleToggleCollapse = () => setIsCollapsed(!isCollapsed);
+  // Lưu trạng thái collapsed vào localStorage khi thay đổi
+  const handleToggleCollapse = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
+  };
 
   return (
     <>

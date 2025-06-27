@@ -3,7 +3,11 @@ import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 
 const TopicsPage = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Lấy trạng thái collapsed từ localStorage, mặc định là false
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('navbarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [topics] = useState([
     { topic_id: 1, name: 'Màng tế bào', chapter: 'Cấu trúc tế bào', description: 'Cấu tạo màng tế bào', CreatedDate: '2024-01-18', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-01-19', status: 'active' },
     { topic_id: 2, name: 'Pha sáng', chapter: 'Quang hợp', description: 'Quá trình hấp thụ ánh sáng', CreatedDate: '2024-01-22', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-01-23', status: 'active' }
@@ -37,7 +41,7 @@ const TopicsPage = () => {
                     <th>Người tạo</th>
                     <th>Người sửa cuối</th>
                     <th>Ngày sửa cuối</th>
-                    <th>Trạng thái</th>
+                  
                     <th>Thao tác</th>
                   </tr>
                 </thead>
@@ -51,11 +55,7 @@ const TopicsPage = () => {
                       <td>{topic.CreatedBy}</td>
                       <td>{topic.ModifiedBy}</td>
                       <td>{topic.ModifiedDate}</td>
-                      <td>
-                        <span className={`status-badge ${topic.status === 'active' ? 'status-active' : 'status-inactive'}`}>
-                          {topic.status === 'active' ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
+                     
                       <td>
                         <button className="btn btn-sm btn-edit" title="Sửa"><i className="fas fa-edit"></i></button>
                         <button className="btn btn-sm btn-delete" title="Xóa"><i className="fas fa-trash"></i></button>
