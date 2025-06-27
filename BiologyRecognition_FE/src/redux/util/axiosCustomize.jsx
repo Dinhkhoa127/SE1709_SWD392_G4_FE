@@ -6,10 +6,11 @@ NProgress.configure({ showSpinner: false, trickleSpeed: 100 });
 
 
 const instance = axios.create({
-  baseURL: "", 
+  baseURL: import.meta.env.VITE_BE_API_URL || "http://localhost:7198/api",
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Cho phép gửi cookie trong request
 });
 
 
@@ -32,7 +33,7 @@ instance.interceptors.response.use(
   },
   (error) => {
     NProgress.done();
-  
+
     return Promise.reject(error);
   }
 );

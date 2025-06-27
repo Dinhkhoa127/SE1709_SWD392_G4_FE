@@ -1,23 +1,74 @@
 // src/components/Login.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { fetchCurrentUserSuccess } from '../redux/actions/userActions';
 import '../styles/Login.css';
+import { loginAPI, loginGoogleAPI } from '../redux/services/apiService';
 
 const Login = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
-    const handleSubmit = async (e) => {
+    const [error, setError] = useState('');
+const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        
-        // Simulate login process
-        setTimeout(() => {
-            console.log('Đăng nhập với:', { username, password });
+        setError('');
+
+        try {
+            const response = await loginAPI(username, password);
+            console.log('Full response:', response);
+            
+            // Kiểm tra response dựa trên structure thực tế từ API
+            if (response && response.userAccountId) {
+                console.log('Đăng nhập thành công:', response);
+                
+                // Lưu thông tin user vào Redux store
+                dispatch(fetchCurrentUserSuccess(response));
+                
+                // Chuyển trang về AdminPage sau khi login thành công
+                console.log('Attempting to navigate to /admin');
+                navigate('/admin', { replace: true });
+                // Backup method nếu navigate không hoạt động
+                setTimeout(() => {
+                    window.location.href = '/admin';
+                }, 100);
+            } else {
+                setError('Đăng nhập thất bại - Thông tin không hợp lệ');
+            }
+        } catch (error) {
+            console.error('Đăng nhập thất bại:', error);
+            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+        } finally {
             setIsLoading(false);
-        }, 1500);
+        }
     };
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const response = await loginGoogleAPI();
+            console.log(response);
+            if (response.status === 200) {
+                console.log('Đăng nhập Google thành công:', response);
+                // Chuyển trang về AdminPage sau khi login Google thành công
+                navigate('/admin');
+            } else {
+                setError(response.message);
+            }
+        } catch (error) {
+            console.error('Đăng nhập Google thất bại:', error);
+            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     return (
         <>
@@ -151,7 +202,8 @@ const Login = () => {
                     </div>
 
                     <div className="alternative-login">
-                        <button className="alt-btn google-btn">
+                        <button className="alt-btn google-btn " onClick={handleGoogleLogin} disabled={isLoading}>
+                            {isLoading && <i className="fas fa-spinner fa-spin"></i>}
                             <i className="fab fa-google"></i>
                             Đăng nhập với Google
                         </button>

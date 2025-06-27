@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import AdminPage from "./pages/AdminPage.jsx";
 import SubjectsPage from "./pages/SubjectsPage";
 import TopicsPage from "./pages/TopicsPage.jsx";
@@ -20,8 +22,9 @@ function App() {
     <>
       <BrowserRouter basename={import.meta.env.VITE_BASE_PATH}>
         <Routes>
-          <Route path="/" element={<AdminPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route path="/subjects" element={<SubjectsPage />} />
           <Route path="/topics" element={<TopicsPage />} />
           <Route path="/chapters" element={<ChaptersPage />} />
@@ -34,6 +37,17 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 }

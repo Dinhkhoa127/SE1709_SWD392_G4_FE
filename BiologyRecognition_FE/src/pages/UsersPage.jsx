@@ -3,12 +3,21 @@ import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 
 const UsersPage = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Lấy trạng thái collapsed từ localStorage, mặc định là false
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('navbarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [users] = useState([
     { user_id: 1, Username: 'admin', FullName: 'Quản trị viên', Email: 'admin@mail.com', Phone: '0123456789', RoleId: 1, IsActive: true, CreatedDate: '2024-01-01', ModifiedDate: '2024-01-10' }
   ]);
 
-  const handleToggleCollapse = () => setIsCollapsed(!isCollapsed);
+  // Lưu trạng thái collapsed vào localStorage khi thay đổi
+  const handleToggleCollapse = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
+  };
 
   return (
     <>
