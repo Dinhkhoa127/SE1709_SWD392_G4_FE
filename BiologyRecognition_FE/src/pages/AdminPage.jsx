@@ -6,7 +6,11 @@ import { useNavigate } from 'react-router-dom';
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Lấy trạng thái collapsed từ localStorage, mặc định là false
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('navbarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [highlightedCard, setHighlightedCard] = useState(null);
   const navigate = useNavigate();
 
@@ -25,7 +29,9 @@ const AdminPage = () => {
   };
 
   const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
   };
 
   // Hàm scroll đến card và highlight

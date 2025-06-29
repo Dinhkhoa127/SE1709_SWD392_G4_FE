@@ -33,7 +33,9 @@ body {
 }
 
 .content-area {
-  padding: 30px;
+  padding: 30px 40px;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .page-header {
