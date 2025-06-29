@@ -49,7 +49,10 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
     if (form.name.trim() && form.description.trim() && currentUser && initialData && isEditing) {
       const updateData = {
         ...form,
+<<<<<<< HEAD
         ...(initialData.subjectId && { subjectId: initialData.subjectId }),
+=======
+>>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
         modifiedBy: currentUser.userAccountId || currentUser.id || currentUser.userId || currentUser.user_id,
       };
       

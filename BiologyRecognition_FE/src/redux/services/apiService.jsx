@@ -43,6 +43,7 @@ const deleteSubjectAPI = async (subjectId) => {
     const URL_API = `/subject/${subjectId}`;
     return instance.delete(URL_API);
 }
+<<<<<<< HEAD
 const getChaptersAPI = async () => {
     const URL_API = "/chapter";
     return instance.get(URL_API);
@@ -64,6 +65,9 @@ const deleteChapterAPI = async (chapterId) => {
     const URL_API = `/chapter/${chapterId}`;
     return instance.delete(URL_API);
 }
+=======
+
+>>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
 export { 
     loginAPI, 
     loginGoogleAPI,
@@ -72,10 +76,14 @@ export {
     getSubjectByIdAPI,
     createSubjectAPI,
     updateSubjectAPI,
+<<<<<<< HEAD
     deleteSubjectAPI,
     getChaptersAPI,
     getChapterByIdAPI,
     createChapterAPI,
     updateChapterAPI,
     deleteChapterAPI,
+=======
+    deleteSubjectAPI
+>>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
 };
