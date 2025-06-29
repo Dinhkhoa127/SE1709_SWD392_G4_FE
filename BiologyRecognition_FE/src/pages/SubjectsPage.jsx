@@ -4,8 +4,8 @@ import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 
-import CreateModal from '../components/CreateModal.jsx';
-import EditModal from '../components/EditModal.jsx';
+import CreateModal from '../components/CreateModalSubject.jsx';
+import EditModal from '../components/EditModalSubject.jsx';
 import DeleteModal from '../components/DeleteModal.jsx';
 
 import { fetchSubjects, fetchSubjectById, createSubject, updateSubject, deleteSubject } from '../redux/thunks/subjectThunks.jsx';

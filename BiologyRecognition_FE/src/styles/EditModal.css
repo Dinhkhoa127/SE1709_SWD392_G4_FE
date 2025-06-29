@@ -54,6 +54,52 @@
   margin-top: 12px;
 }
 
+.edit-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 20px;
+}
+
+.edit-modal-actions .btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.edit-modal-actions .btn-primary {
+  background: #2196f3;
+  color: white;
+}
+
+.edit-modal-actions .btn-primary:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.edit-modal-actions .btn-secondary {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.edit-modal-actions .btn-secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.edit-modal-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .edit-modal-form label {
   font-weight: 500;
   margin-bottom: 6px;
@@ -95,4 +141,18 @@
   top: 18px;
   right: 22px;
   cursor: pointer;
+}
+
+/* Loading indicator for edit modal */
+.edit-modal .loading-indicator {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-modal .loading-indicator i {
+  color: #2196f3;
 }

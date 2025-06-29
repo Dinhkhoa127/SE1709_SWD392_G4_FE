@@ -44,6 +44,38 @@ const deleteSubjectAPI = async (subjectId) => {
     return instance.delete(URL_API);
 }
 
+// Topic APIs
+const getTopicsAPI = async () => {
+    const URL_API = "/topic";
+    return instance.get(URL_API);
+}
+
+const getTopicByIdAPI = async (topicId) => {
+    const URL_API = `/topic/${topicId}`;
+    return instance.get(URL_API);
+}
+
+const createTopicAPI = async (topicData) => {
+    const URL_API = "/topic";
+    return instance.post(URL_API, topicData);
+}
+
+const updateTopicAPI = async (topicData) => {
+    const URL_API = "/topic";
+    return instance.put(URL_API, topicData);
+}
+
+const deleteTopicAPI = async (topicId) => {
+    const URL_API = `/topic/${topicId}`;
+    return instance.delete(URL_API);
+}
+
+// Chapter APIs
+const getChaptersAPI = async () => {
+    const URL_API = "/chapter";
+    return instance.get(URL_API);
+}
+
 export { 
     loginAPI, 
     loginGoogleAPI,
@@ -52,5 +84,11 @@ export {
     getSubjectByIdAPI,
     createSubjectAPI,
     updateSubjectAPI,
-    deleteSubjectAPI
+    deleteSubjectAPI,
+    getTopicsAPI,
+    getTopicByIdAPI,
+    createTopicAPI,
+    updateTopicAPI,
+    deleteTopicAPI,
+    getChaptersAPI
 };

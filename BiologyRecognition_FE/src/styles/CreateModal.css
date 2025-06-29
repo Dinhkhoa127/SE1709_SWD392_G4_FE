@@ -140,3 +140,35 @@
   right: 22px;
   cursor: pointer;
 }
+
+/* Loading indicator cho dropdown */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.loading-indicator i {
+  color: #43a047;
+}
+
+/* Style cho select disabled */
+.create-modal-form select:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Style cho select options */
+.create-modal-form select option {
+  padding: 8px;
+  background: #fff;
+  color: #222;
+}
+
+.create-modal-form select option:hover {
+  background: #f8fafc;
+}

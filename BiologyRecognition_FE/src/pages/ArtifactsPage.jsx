@@ -29,305 +29,48 @@ const ArtifactsPage = () => {
         <Header activeSection="artifacts" isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
-            <div className="page-header" style={{ 
-              marginBottom: '32px',
-              padding: '24px 0',
-              borderBottom: '1px solid #e2e8f0'
-            }}>
-              <h1 className="page-title" style={{ 
-                fontSize: '34px',
-                fontWeight: '800',
-                color: '#0c4a6e',
-                marginBottom: '8px',
-                textShadow: '0 3px 6px rgba(12, 74, 110, 0.3)',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-              }}>Quản lý các mẫu vật sinh học</h1>
-              <p className="page-description" style={{ 
-                fontSize: '16px',
-                color: '#4a5568',
-                marginBottom: '0',
-                fontWeight: '500'
-              }}>Quản lý và tổ chức các mẫu vật sinh học trong hệ thống</p>
+            <div className="page-header">
+              <h1 className="page-title">Artifacts Management</h1>
+              <p className="page-description">Quản lý các mẫu vật sinh học</p>
             </div>
-            <div className="action-buttons" style={{ marginBottom: '24px' }}>
-              <button 
-                className="btn btn-primary"
-                style={{
-                  backgroundColor: '#3182ce',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 2px 4px rgba(49, 130, 206, 0.3)'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#2c5aa0'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#3182ce'}
-              >
-                <i className="fas fa-plus" style={{ fontSize: '13px' }}></i> 
-                Thêm mới mẫu vật
-              </button>
+            <div className="action-buttons" style={{ marginBottom: 24 }}>
+              <button className="btn btn-primary"><i className="fas fa-plus"></i> Thêm mới mẫu vật</button>
             </div>
-            <div className="table-responsive" style={{ 
-              marginTop: '20px',
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-              overflow: 'auto',
-              overflowX: 'auto',
-              maxWidth: '100%'
-            }}>
-              <table className="data-table" style={{ 
-                width: '100%',
-                minWidth: '1500px',
-                borderCollapse: 'collapse',
-                fontSize: '14px',
-                tableLayout: 'auto'
-              }}>
+            <div className="table-responsive">
+              <table className="data-table">
                 <thead>
-                  <tr style={{ 
-                    backgroundColor: '#f8fafc',
-                    borderBottom: '2px solid #e2e8f0'
-                  }}>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '200px'
-                    }}>Tên mẫu vật</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Chủ đề</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '150px'
-                    }}>Tên khoa học</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '200px'
-                    }}>Mô tả</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '130px'
-                    }}>Ngày tạo</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Người tạo</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Người sửa cuối</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '130px'
-                    }}>Ngày sửa cuối</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '100px'
-                    }}>Trạng thái</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Thao tác</th>
+                  <tr>
+                    <th>Tên mẫu vật</th>
+                    <th>Chủ đề</th>
+                    <th>Tên khoa học</th>
+                    <th>Mô tả</th>
+                    <th>Ngày tạo</th>
+                    <th>Người tạo</th>
+                    <th>Người sửa cuối</th>
+                    <th>Ngày sửa cuối</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {artifacts.map((artifact, index) => (
-                    <tr key={artifact.artifact_id} style={{ 
-                      borderBottom: '1px solid #e2e8f0',
-                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => e.target.closest('tr').style.backgroundColor = '#f7fafc'}
-                    onMouseLeave={(e) => e.target.closest('tr').style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#fafafa'}
-                    >
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#2d3748',
-                        fontWeight: '500',
-                        lineHeight: '1.5'
-                      }}>{artifact.name}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        lineHeight: '1.5'
-                      }}>{artifact.topic}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        lineHeight: '1.5',
-                        fontStyle: 'italic'
-                      }}>{artifact.scientific_name}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        lineHeight: '1.5',
-                        maxWidth: '300px',
-                        wordWrap: 'break-word'
-                      }}>{artifact.description}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#718096',
-                        fontSize: '13px'
-                      }}>{artifact.CreatedDate}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        fontSize: '13px'
-                      }}>{artifact.CreatedBy}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        fontSize: '13px'
-                      }}>{artifact.ModifiedBy}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#718096',
-                        fontSize: '13px'
-                      }}>{artifact.ModifiedDate}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        textAlign: 'center'
-                      }}>
-                        <span className={`status-badge ${artifact.status === 'active' ? 'status-active' : 'status-inactive'}`} style={{
-                          padding: '4px 12px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          backgroundColor: artifact.status === 'active' ? '#dcfce7' : '#fef2f2',
-                          color: artifact.status === 'active' ? '#166534' : '#dc2626'
-                        }}>
-                          {artifact.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                  {artifacts.map(artifact => (
+                    <tr key={artifact.artifact_id}>
+                      <td>{artifact.name}</td>
+                      <td>{artifact.topic}</td>
+                      <td>{artifact.scientific_name}</td>
+                      <td>{artifact.description}</td>
+                      <td>{artifact.CreatedDate}</td>
+                      <td>{artifact.CreatedBy}</td>
+                      <td>{artifact.ModifiedBy}</td>
+                      <td>{artifact.ModifiedDate}</td>
+                      <td>
+                        <span className={`status-badge ${artifact.status === 'active' ? 'status-active' : 'status-inactive'}`}>
+                          {artifact.status === 'active' ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        textAlign: 'center'
-                      }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button 
-                            className="btn btn-sm btn-edit" 
-                            title="Sửa"
-                            style={{
-                              backgroundColor: '#3182ce',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = '#2c5aa0'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = '#3182ce'}
-                          >
-                            <i className="fas fa-edit" style={{ fontSize: '11px' }}></i>
-                            Sửa
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-delete" 
-                            title="Xóa"
-                            style={{
-                              backgroundColor: '#e53e3e',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = '#c53030'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = '#e53e3e'}
-                          >
-                            <i className="fas fa-trash" style={{ fontSize: '11px' }}></i>
-                            Xóa
-                          </button>
-                        </div>
+                      <td>
+                        <button className="btn btn-sm btn-edit" title="Sửa"><i className="fas fa-edit"></i></button>
+                        <button className="btn btn-sm btn-delete" title="Xóa"><i className="fas fa-trash"></i></button>
                       </td>
                     </tr>
                   ))}

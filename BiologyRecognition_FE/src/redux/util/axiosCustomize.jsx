@@ -33,7 +33,6 @@ instance.interceptors.response.use(
   },
   (error) => {
     NProgress.done();
-
     return Promise.reject(error);
   }
 );

@@ -1,19 +1,113 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 
+import CreateModalTopic from '../components/CreateModalTopic.jsx';
+import EditModalTopic from '../components/EditModalTopic.jsx';
+import DeleteModal from '../components/DeleteModal.jsx';
+
+import { fetchTopics, fetchTopicById, createTopic, updateTopic, deleteTopic } from '../redux/thunks/topicThunks.jsx';
+import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
+
+import '../styles/TopicsPage.css';
+
 const TopicsPage = () => {
+  const dispatch = useDispatch();
+  const { topics, selectedTopic: storeSelectedTopic, loading, error, createLoading, updateLoading, deleteLoading, fetchTopicLoading } = useSelector(state => state.topics);
+  const { currentUser } = useSelector(state => state.user);
+  
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('navbarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
-  const [topics] = useState([
-    { topic_id: 1, name: 'Màng tế bào', chapter: 'Cấu trúc tế bào', description: 'Cấu tạo màng tế bào', CreatedDate: '2024-01-18', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-01-19', status: 'active' },
-    { topic_id: 2, name: 'Pha sáng', chapter: 'Quang hợp', description: 'Quá trình hấp thụ ánh sáng', CreatedDate: '2024-01-22', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-01-23', status: 'active' }
-  ]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState(null);
 
-  const handleToggleCollapse = () => setIsCollapsed(!isCollapsed);
+  // Fetch topics and current user when component mount
+  useEffect(() => {
+    dispatch(fetchTopics());
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
+
+  // Lưu trạng thái collapsed vào localStorage khi thay đổi
+  const handleToggleCollapse = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
+  };
+
+  // Handlers
+  const handleCreateTopic = (topicData) => {
+    dispatch(createTopic(topicData))
+      .then(() => {
+        setShowCreate(false);
+        toast.success('Tạo chủ đề thành công!');
+      })
+      .catch(() => {
+        toast.error('Có lỗi xảy ra khi tạo chủ đề!');
+      });
+  };
+
+  const handleEditTopic = async (topic) => {
+    setSelectedTopic(topic);
+    
+    // Fetch chi tiết topic để đảm bảo có đầy đủ thông tin (bao gồm topic_id)
+    if (topic.topicId || topic.topic_id) {
+      await dispatch(fetchTopicById(topic.topicId || topic.topic_id));
+    }
+    
+    setShowEdit(true);
+  };
+
+  const handleUpdateTopic = (topicData) => {
+    const topicToUpdate = storeSelectedTopic || selectedTopic;
+    
+    if (topicToUpdate) {
+      const topicId = topicToUpdate.topicId || topicToUpdate.topic_id;
+      
+      if (!topicId) {
+        console.error("Lỗi: Không tìm thấy ID của chủ đề!");
+        return;
+      }
+      
+      dispatch(updateTopic({ 
+        topicId, 
+        data: topicData 
+      }))
+      .then(() => {
+        setShowEdit(false);
+        setSelectedTopic(null);
+        toast.success('Cập nhật chủ đề thành công!');
+      })
+      .catch((error) => {
+        toast.error('Có lỗi xảy ra khi cập nhật chủ đề!');
+      });
+    }
+  };
+
+  const handleDeleteTopic = (topic) => {
+    setSelectedTopic(topic);
+    setShowDelete(true);
+  };
+
+  const confirmDeleteTopic = () => {
+    if (selectedTopic) {
+      dispatch(deleteTopic(selectedTopic.topicId || selectedTopic.topic_id))
+        .then(() => {
+          setShowDelete(false);
+          setSelectedTopic(null);
+          toast.success('Xóa chủ đề thành công!');
+        })
+        .catch(() => {
+          toast.error('Có lỗi xảy ra khi xóa chủ đề!');
+        });
+    }
+  };
 
   return (
     <>
@@ -27,9 +121,34 @@ const TopicsPage = () => {
               <h1 className="page-title">Topics Management</h1>
               <p className="page-description">Quản lý các chủ đề sinh học</p>
             </div>
-            <div className="action-buttons" style={{ marginBottom: 24 }}>
-              <button className="btn btn-primary"><i className="fas fa-plus"></i> Thêm mới chủ đề</button>
+            
+            <div className="action-buttons">
+              <button 
+                className="btn-primary" 
+                onClick={() => setShowCreate(true)}
+                disabled={createLoading}
+              >
+                <i className="fas fa-plus"></i> 
+                {createLoading ? 'Đang tạo...' : 'Thêm mới chủ đề'}
+              </button>
             </div>
+            
+            {/* Loading state */}
+            {loading && (
+              <div className="loading-container">
+                <i className="fas fa-spinner fa-spin"></i>
+                <div>Đang tải dữ liệu...</div>
+              </div>
+            )}
+            
+            {/* Error state */}
+            {error && (
+              <div className="error-container">
+                <i className="fas fa-exclamation-triangle"></i> 
+                <span>{error}</span>
+              </div>
+            )}
+            
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
@@ -41,30 +160,82 @@ const TopicsPage = () => {
                     <th>Người tạo</th>
                     <th>Người sửa cuối</th>
                     <th>Ngày sửa cuối</th>
-                  
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {topics.map(topic => (
-                    <tr key={topic.topic_id}>
-                      <td>{topic.name}</td>
-                      <td>{topic.chapter}</td>
-                      <td>{topic.description}</td>
-                      <td>{topic.CreatedDate}</td>
-                      <td>{topic.CreatedBy}</td>
-                      <td>{topic.ModifiedBy}</td>
-                      <td>{topic.ModifiedDate}</td>
-                     
-                      <td>
-                        <button className="btn btn-sm btn-edit" title="Sửa"><i className="fas fa-edit"></i></button>
-                        <button className="btn btn-sm btn-delete" title="Xóa"><i className="fas fa-trash"></i></button>
+                  {!loading && topics.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="empty-state">
+                        <div className="empty-state-icon">
+                          <i className="fas fa-inbox"></i>
+                        </div>
+                        Không có dữ liệu chủ đề
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    topics.map(topic => (
+                      <tr key={topic.topicId || topic.topic_id}>
+                        <td>{topic.name}</td>
+                        <td>{topic.chapterName || topic.chapter}</td>
+                        <td>{topic.description}</td>
+                        <td>{topic.createdDate || topic.CreatedDate}</td>
+                        <td>{topic.createdName || topic.CreatedBy}</td>
+                        <td>{topic.modifiedName || topic.ModifiedBy}</td>
+                        <td>{topic.modifiedDate || topic.ModifiedDate}</td>
+                        <td>
+                          <div className="action-buttons-container">
+                            <button
+                              className="btn-edit"
+                              title="Sửa"
+                              onClick={() => handleEditTopic(topic)}
+                              disabled={updateLoading}
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button 
+                              className="btn-delete" 
+                              title="Xóa" 
+                              onClick={() => handleDeleteTopic(topic)}
+                              disabled={deleteLoading}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
+            
+            <CreateModalTopic 
+              open={showCreate} 
+              onClose={() => setShowCreate(false)} 
+              onSubmit={handleCreateTopic}
+              loading={createLoading}
+            />
+            <EditModalTopic 
+              open={showEdit} 
+              onClose={() => {
+                setShowEdit(false);
+                setSelectedTopic(null);
+              }}
+              onSubmit={handleUpdateTopic}
+              initialData={storeSelectedTopic || selectedTopic}
+              loading={updateLoading || fetchTopicLoading}
+            />
+            <DeleteModal
+              open={showDelete}
+              onClose={() => {
+                setShowDelete(false);
+                setSelectedTopic(null);
+              }}
+              onConfirm={confirmDeleteTopic}
+              loading={deleteLoading}
+              itemName={selectedTopic?.name}
+            />
           </div>
         </main>
       </div>
