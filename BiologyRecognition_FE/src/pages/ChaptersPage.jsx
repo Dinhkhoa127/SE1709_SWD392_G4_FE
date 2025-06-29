@@ -5,15 +5,11 @@ import { fetchSubjects } from '../redux/thunks/subjectThunks';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 import '../styles/ChaptersPage.css';
-<<<<<<< HEAD
 import { toast } from 'react-toastify';
-import CreateModal from '../components/CreateModal';
-import EditModal from '../components/EditModal.jsx';
+import CreateModalChapter from '../components/CreateModalChapter';
+import EditModalChapter from '../components/EditModalChapter';
 import DeleteModal from '../components/DeleteModal.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
-=======
-
->>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
 
 const ChaptersPage = () => {
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
@@ -21,7 +17,6 @@ const ChaptersPage = () => {
     const saved = localStorage.getItem('navbarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
-<<<<<<< HEAD
 
   const dispatch = useDispatch();
   const { chapters, loading, error, createLoading, updateLoading, fetchChapterByIdLoading, selectedChapter, deleteLoading } = useSelector(state => state.chapters);
@@ -38,19 +33,11 @@ const ChaptersPage = () => {
     dispatch(fetchCurrentUser());
   }, [dispatch]);
 
-=======
-  const [chapters] = useState([
-    { chapter_id: 1, name: 'Cấu trúc tế bào', subject: 'Sinh học tế bào', description: 'Các thành phần cơ bản của tế bào', CreatedDate: '2024-01-16', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-01-17', status: 'active' },
-    { chapter_id: 2, name: 'Quang hợp', subject: 'Thực vật học', description: 'Quá trình quang hợp ở thực vật', CreatedDate: '2024-01-21', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-01-22', status: 'active' }
-  ]);
-
->>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
   // Lưu trạng thái collapsed vào localStorage khi thay đổi
   const handleToggleCollapse = () => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
-<<<<<<< HEAD
   };
 
   const handleCreateChapter = (chapterData) => {
@@ -108,8 +95,6 @@ const ChaptersPage = () => {
       .catch(() => {
         toast.error('Có lỗi xảy ra khi xóa chương!');
       });
-=======
->>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
   };
 
   return (
@@ -139,7 +124,7 @@ const ChaptersPage = () => {
                 <i className="fas fa-plus"></i> {createLoading ? 'Đang tạo...' : 'Thêm mới chương'}
               </button>
             </div>
-            <CreateModal
+            <CreateModalChapter
               open={showCreate}
               onClose={() => setShowCreate(false)}
               onSubmit={handleCreateChapter}
@@ -147,7 +132,7 @@ const ChaptersPage = () => {
               subjects={subjects}
               isChapter={true}
             />
-            <EditModal
+            <EditModalChapter
               open={showEdit}
               onClose={() => {
                 setShowEdit(false);
@@ -192,15 +177,10 @@ const ChaptersPage = () => {
                     <th>Người tạo</th>
                     <th>Người sửa cuối</th>
                     <th>Ngày sửa cuối</th>
-<<<<<<< HEAD
-=======
-                 
->>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-<<<<<<< HEAD
                   {!loading && chapters.length === 0 ? (
                     <tr>
                       <td colSpan="8" className="empty-state">
@@ -208,27 +188,6 @@ const ChaptersPage = () => {
                           <i className="fas fa-inbox"></i>
                         </div>
                         Không có dữ liệu chương học
-=======
-                  {chapters.map(chapter => (
-                    <tr key={chapter.chapter_id}>
-                      <td>{chapter.name}</td>
-                      <td>{chapter.subject}</td>
-                      <td>{chapter.description}</td>
-                      <td>{chapter.CreatedDate}</td>
-                      <td>{chapter.CreatedBy}</td>
-                      <td>{chapter.ModifiedBy}</td>
-                      <td>{chapter.ModifiedDate}</td>
-                    
-                      <td>
-                        <div className="action-buttons-container">
-                          <button className="btn btn-edit" title="Sửa">
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          <button className="btn btn-delete" title="Xóa">
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        </div>
->>>>>>> e19e7a94f29870a9832573f66fcd199990bce730
                       </td>
                     </tr>
                   ) : (

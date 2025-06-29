@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
+import { fetchSubjects } from '../redux/thunks/subjectThunks';
 import '../styles/EditModal.css';
 
 const defaultForm = {
   name: '',
-  description: ''
+  description: '',
+  subjectId: ''
 };
 
-const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
+const EditModalChapter = ({ open, onClose, onSubmit, initialData, loading }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector(state => state.user);
+  const { subjects } = useSelector(state => state.subjects);
   
   const [form, setForm] = useState(defaultForm);
   const [isEditing, setIsEditing] = useState(false);
@@ -21,7 +24,8 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
     if (open && initialData) {
       setForm({
         name: initialData.name || '',
-        description: initialData.description || ''
+        description: initialData.description || '',
+        subjectId: initialData.subjectId || ''
       });
       setIsEditing(false); // Reset to view mode when opening
     } else {
@@ -37,6 +41,13 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
     }
   }, [open, currentUser, dispatch]);
 
+  // Fetch subjects when modal opens
+  useEffect(() => {
+    if (open) {
+      dispatch(fetchSubjects());
+    }
+  }, [open, dispatch]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -46,10 +57,10 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
   };
 
   const handleSubmit = () => {
-    if (form.name.trim() && form.description.trim() && currentUser && initialData && isEditing) {
+    if (form.name.trim() && form.description.trim() && form.subjectId && currentUser && initialData && isEditing) {
       const updateData = {
         ...form,
-        ...(initialData.subjectId && { subjectId: initialData.subjectId }),
+        subjectId: parseInt(form.subjectId),
         modifiedBy: currentUser.userAccountId || currentUser.id || currentUser.userId || currentUser.user_id,
       };
       
@@ -71,31 +82,50 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
     <div className="edit-modal-overlay">
       <div className="edit-modal-content edit-modal">
         <div className="edit-modal-title">
-          {isEditing ? 'Chỉnh sửa môn học' : 'Xem thông tin môn học'}
+          {isEditing ? 'Chỉnh sửa chương học' : 'Xem thông tin chương học'}
         </div>
         <button className="close-btn" onClick={handleClose} aria-label="Đóng">
           <i className="fas fa-times"></i>
         </button>
         <form className="edit-modal-form" onSubmit={handleSubmit} id="editForm">
           <div className="form-group full-width">
-            <label>Tên môn học</label>
+            <label>Tên chương</label>
             <textarea
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Nhập tên môn học"
+              placeholder="Nhập tên chương"
               rows="2"
               disabled={!isEditing}
               required
             />
           </div>
+          
+          <div className="form-group full-width">
+            <label>Môn học</label>
+            <select
+              name="subjectId"
+              value={form.subjectId}
+              onChange={handleChange}
+              disabled={!isEditing}
+              required
+            >
+              <option value="">Chọn môn học</option>
+              {subjects && subjects.map(subject => (
+                <option key={subject.subjectId || subject.subject_id} value={subject.subjectId || subject.subject_id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
           <div className="form-group full-width">
             <label>Mô tả</label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
-              placeholder="Nhập mô tả môn học"
+              placeholder="Nhập mô tả chương học"
               rows="4"
               disabled={!isEditing}
               required
@@ -132,7 +162,8 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
                   if (initialData) {
                     setForm({
                       name: initialData.name || '',
-                      description: initialData.description || ''
+                      description: initialData.description || '',
+                      subjectId: initialData.subjectId || ''
                     });
                   }
                   setIsEditing(false);
@@ -145,7 +176,7 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
                 type="button" 
                 className="btn btn-primary"
                 onClick={handleSubmit}
-                disabled={loading || !form.name.trim() || !form.description.trim()}
+                disabled={loading || !form.name.trim() || !form.description.trim() || !form.subjectId}
               >
                 {loading ? (
                   <>
@@ -165,4 +196,4 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
   );
 };
 
-export default EditModal;
+export default EditModalChapter;

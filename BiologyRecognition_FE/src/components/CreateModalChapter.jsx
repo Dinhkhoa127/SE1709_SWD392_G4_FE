@@ -4,13 +4,14 @@ import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import '../styles/CreateModal.css';
 
-const CreateModal = ({ open, onClose, onSubmit, loading }) => {
+const CreateModalChapter = ({ open, onClose, onSubmit, loading, subjects = [], isChapter = false }) => {
     const dispatch = useDispatch();
     const { currentUser } = useSelector(state => state.user);
     
     const [form, setForm] = useState({
         name: '',
-        description: ''
+        description: '',
+        subjectId: ''
     });
 
     // Fetch current user when modal opens
@@ -22,7 +23,8 @@ const CreateModal = ({ open, onClose, onSubmit, loading }) => {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-    };    const handleSubmit = (e) => {
+    };
+    const handleSubmit = (e) => {
         e.preventDefault();
         
         if (!currentUser) {
@@ -37,55 +39,82 @@ const CreateModal = ({ open, onClose, onSubmit, loading }) => {
             return;
         }
 
-        const subjectData = {
-            name: form.name,
-            description: form.description,
-            createdBy: userId
-        };
+        let data;
+        if (isChapter) {
+            if (!form.subjectId) {
+                toast.error('Vui lòng chọn môn học!');
+                return;
+            }
+            data = {
+                subjectId: Number(form.subjectId),
+                name: form.name,
+                description: form.description,
+                createdBy: userId
+            };
+        } else {
+            data = {
+                name: form.name,
+                description: form.description,
+                createdBy: userId
+            };
+        }
 
-        onSubmit(subjectData);
-        
+        onSubmit(data);
         setForm({
             name: '',
-            description: ''
+            description: '',
+            subjectId: ''
         });
     };
 
     const handleClose = () => {
         setForm({
             name: '',
-            description: ''
+            description: '',
+            subjectId: ''
         });
         onClose();
     };
 
     if (!open) return null;
 
-    return (        <div className="create-modal-overlay">
+    return (
+        <div className="create-modal-overlay">
             <div className="create-modal-content create-modal">
-                <div className="create-modal-title">Tạo môn học mới</div>
+                <div className="create-modal-title">{isChapter ? 'Tạo chương mới' : 'Tạo môn học mới'}</div>
                 <button className="close-btn" onClick={handleClose} aria-label="Đóng">
                     <i className="fas fa-times"></i>
                 </button>
                 <form className="create-modal-form" onSubmit={handleSubmit}>
+                    {isChapter && (
+                        <div className="form-group full-width">
+                            <label>Môn học *</label>
+                            <select name="subjectId" value={form.subjectId} onChange={handleChange} required>
+                                <option value="">-- Chọn môn học --</option>
+                                {subjects.map(sub => (
+                                    <option key={sub.subject_id || sub.subjectId} value={sub.subject_id || sub.subjectId}>{sub.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <div className="form-group full-width">
-                        <label>Tên môn học *</label>
+                        <label>{isChapter ? 'Tên chương *' : 'Tên môn học *'}</label>
                         <textarea 
                             name="name" 
                             value={form.name} 
                             onChange={handleChange}
-                            placeholder="Nhập tên môn học"
+                            placeholder={isChapter ? 'Nhập tên chương' : 'Nhập tên môn học'}
                             rows="2"
                             required
                         />
                     </div>
                     <div className="form-group full-width">
-                        <label>Mô tả *</label>
+                        <label>{isChapter ? 'Mô tả *' : 'Mô tả *'}</label>
                         <textarea 
                             name="description" 
                             value={form.description} 
                             onChange={handleChange}
-                            placeholder="Nhập mô tả môn học"
+                            placeholder={isChapter ? 'Nhập mô tả chương' : 'Nhập mô tả môn học'}
                             rows="4"
                             required
                         />
@@ -98,10 +127,11 @@ const CreateModal = ({ open, onClose, onSubmit, loading }) => {
                             disabled={loading}
                         >
                             Hủy
-                        </button>                        <button 
+                        </button>
+                        <button 
                             type="submit" 
                             className="btn btn-primary"
-                            disabled={loading || !form.name.trim() || !form.description.trim()}
+                            disabled={loading || !form.name.trim() || !form.description.trim() || (isChapter && !form.subjectId)}
                         >
                             {loading ? (
                                 <>
@@ -118,4 +148,4 @@ const CreateModal = ({ open, onClose, onSubmit, loading }) => {
     );
 };
 
-export default CreateModal;
+export default CreateModalChapter;
