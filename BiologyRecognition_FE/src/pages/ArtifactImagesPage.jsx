@@ -29,6 +29,39 @@ const ArtifactImagesPage = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Helper function to get artifact name from artifactId
+  const getArtifactName = (artifactId) => {
+    const artifact = artifactTypes.find(a => a.artifactTypeId === artifactId);
+    return artifact ? artifact.name : `Artifact ID: ${artifactId}`;
+  };
+
+  // Filter artifact media based on search term
+  const filteredArtifactMedia = artifactMedia.filter(media => {
+    const artifactName = getArtifactName(media.artifactId);
+    return (
+      media.artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      media.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      media.url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      media.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
+  };
 
   // Fetch artifact media and current user when component mount
   useEffect(() => {
@@ -49,10 +82,10 @@ const ArtifactImagesPage = () => {
     dispatch(createArtifactMedia(artifactMediaData))
       .then(() => {
         setShowCreate(false);
-        toast.success('Tạo hình ảnh mẫu vật thành công!');
+        toast.success('Tạo media mẫu vật thành công!');
       })
       .catch(() => {
-        toast.error('Có lỗi xảy ra khi tạo hình ảnh mẫu vật!');
+        toast.error('Có lỗi xảy ra khi tạo media mẫu vật!');
       });
   };
 
@@ -66,10 +99,10 @@ const ArtifactImagesPage = () => {
       .then(() => {
         setShowEdit(false);
         setSelectedMedia(null);
-        toast.success('Cập nhật hình ảnh mẫu vật thành công!');
+        toast.success('Cập nhật media mẫu vật thành công!');
       })
       .catch(() => {
-        toast.error('Có lỗi xảy ra khi cập nhật hình ảnh mẫu vật!');
+        toast.error('Có lỗi xảy ra khi cập nhật media mẫu vật!');
       });
   };
 
@@ -84,10 +117,10 @@ const ArtifactImagesPage = () => {
         .then(() => {
           setShowDelete(false);
           setSelectedMedia(null);
-          toast.success('Xóa hình ảnh mẫu vật thành công!');
+          toast.success('Xóa media mẫu vật thành công!');
         })
         .catch(() => {
-          toast.error('Có lỗi xảy ra khi xóa hình ảnh mẫu vật!');
+          toast.error('Có lỗi xảy ra khi xóa media mẫu vật!');
         });
     }
   };
@@ -97,12 +130,6 @@ const ArtifactImagesPage = () => {
     setShowEdit(false);
     setShowDelete(false);
     setSelectedMedia(null);
-  };
-
-  // Helper function to get artifact name from artifactId
-  const getArtifactName = (artifactId) => {
-    const artifact = artifactTypes.find(a => a.artifactTypeId === artifactId);
-    return artifact ? artifact.name : `Artifact ID: ${artifactId}`;
   };
 
   // Loading state
@@ -136,8 +163,8 @@ const ArtifactImagesPage = () => {
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
             <div className="page-header">
-              <h1 className="page-title">Quản lý hình ảnh mẫu vật</h1>
-              <p className="page-description">Quản lý hình ảnh và media của các mẫu vật sinh học</p>
+              <h1 className="page-title">Quản lý media mẫu vật</h1>
+              <p className="page-description">Quản lý hình ảnh, video, audio và tài liệu của các mẫu vật sinh học</p>
             </div>
             
             <div className="action-buttons" style={{ marginBottom: 24 }}>
@@ -147,8 +174,37 @@ const ArtifactImagesPage = () => {
                 disabled={createLoading}
               >
                 <i className="fas fa-plus"></i> 
-                {createLoading ? 'Đang tạo...' : 'Thêm mới hình ảnh'}
+                {createLoading ? 'Đang tạo...' : 'Thêm mới media'}
               </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên tài liệu, mẫu vật, loại, URL hoặc mô tả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredArtifactMedia.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
             </div>
 
             <div className="table-responsive">
@@ -164,18 +220,18 @@ const ArtifactImagesPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {artifactMedia && artifactMedia.length > 0 ? (
-                    artifactMedia.map(media => (
+                  {filteredArtifactMedia && filteredArtifactMedia.length > 0 ? (
+                    filteredArtifactMedia.map(media => (
                       <tr key={media.artifactMediaId}>
-                        <td>{media.artifactName}</td>
-                        <td>{getArtifactName(media.artifactId)}</td>
-                        <td>{media.type}</td>
+                        <td>{highlightText(media.artifactName, searchTerm)}</td>
+                        <td>{highlightText(getArtifactName(media.artifactId), searchTerm)}</td>
+                        <td>{highlightText(media.type, searchTerm)}</td>
                         <td>
                           <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {media.url}
+                            {highlightText(media.url, searchTerm)}
                           </div>
                         </td>
-                        <td>{media.description}</td>
+                        <td>{highlightText(media.description, searchTerm)}</td>
                         <td>
                           <button 
                             className="btn btn-sm btn-edit" 
@@ -198,8 +254,8 @@ const ArtifactImagesPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center">
-                        Không có dữ liệu hình ảnh mẫu vật
+                      <td colSpan="6" className="text-center">
+                        {searchTerm ? `Không tìm thấy media nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu media mẫu vật'}
                       </td>
                     </tr>
                   )}
@@ -232,7 +288,7 @@ const ArtifactImagesPage = () => {
         onConfirm={handleConfirmDelete}
         loading={deleteLoading}
         itemName={selectedMedia?.artifactName}
-        itemType="hình ảnh mẫu vật"
+        itemType="media mẫu vật"
       />
     </>
   );

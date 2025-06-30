@@ -29,6 +29,37 @@ const ArtifactTypePage = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [selectedArtifactType, setSelectedArtifactType] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Helper function to get topic name from topicId
+  const getTopicName = (topicId) => {
+    const topic = topics.find(t => t.topicId === topicId);
+    return topic ? topic.topicName || topic.name : `Topic ID: ${topicId}`;
+  };
+
+  // Filter artifact types based on search term
+  const filteredArtifactTypes = artifactTypes.filter(artifactType => {
+    const topicName = getTopicName(artifactType.topicId);
+    return (
+      artifactType.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      topicName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      artifactType.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
+  };
 
   // Fetch artifact types and current user when component mount
   useEffect(() => {
@@ -99,11 +130,6 @@ const ArtifactTypePage = () => {
     setSelectedArtifactType(null);
   };
 
-  // Helper function to get topic name from topicId
-  const getTopicName = (topicId) => {
-    const topic = topics.find(t => t.topicId === topicId);
-    return topic ? topic.topicName || topic.name : `Topic ID: ${topicId}`;
-  };
   // Loading state
   if (loading) {
     return (
@@ -150,6 +176,35 @@ const ArtifactTypePage = () => {
               </button>
             </div>
 
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên bài, tên loại hoặc mô tả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredArtifactTypes.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
+            </div>
+
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
@@ -161,12 +216,12 @@ const ArtifactTypePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {artifactTypes && artifactTypes.length > 0 ? (
-                    artifactTypes.map(artifactType => (
+                  {filteredArtifactTypes && filteredArtifactTypes.length > 0 ? (
+                    filteredArtifactTypes.map(artifactType => (
                       <tr key={artifactType.artifactTypeId}>
-                        <td>{getTopicName(artifactType.topicId)}</td>
-                        <td>{artifactType.name}</td>
-                        <td>{artifactType.description}</td>
+                        <td>{highlightText(getTopicName(artifactType.topicId), searchTerm)}</td>
+                        <td>{highlightText(artifactType.name, searchTerm)}</td>
+                        <td>{highlightText(artifactType.description, searchTerm)}</td>
                         <td>
                           <button 
                             className="btn btn-sm btn-edit" 
@@ -190,7 +245,7 @@ const ArtifactTypePage = () => {
                   ) : (
                     <tr>
                       <td colSpan="4" className="text-center">
-                        Không có dữ liệu loại mẫu vật
+                        {searchTerm ? `Không tìm thấy loại mẫu vật nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu loại mẫu vật'}
                       </td>
                     </tr>
                   )}

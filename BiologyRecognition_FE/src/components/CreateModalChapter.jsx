@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import '../styles/CreateModal.css';
-
 const CreateModalChapter = ({ open, onClose, onSubmit, loading, subjects = [], isChapter = false }) => {
     const dispatch = useDispatch();
     const { currentUser } = useSelector(state => state.user);

@@ -27,6 +27,28 @@ const ChaptersPage = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
   const [deletingChapter, setDeletingChapter] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filter chapters based on search term
+  const filteredChapters = chapters.filter(chapter =>
+    chapter.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (chapter.subjectName || chapter.subject)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    chapter.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
+  };
   
   useEffect(() => {
     dispatch(fetchChapters());
@@ -124,6 +146,35 @@ const ChaptersPage = () => {
                 <i className="fas fa-plus"></i> {createLoading ? 'Đang tạo...' : 'Thêm mới chương'}
               </button>
             </div>
+            
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên chương, môn học hoặc mô tả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredChapters.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
+            </div>
             <CreateModalChapter
               open={showCreate}
               onClose={() => setShowCreate(false)}
@@ -181,21 +232,21 @@ const ChaptersPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {!loading && chapters.length === 0 ? (
+                  {!loading && filteredChapters.length === 0 ? (
                     <tr>
                       <td colSpan="8" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
-                        Không có dữ liệu chương học
+                        {searchTerm ? `Không tìm thấy chương nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu chương học'}
                       </td>
                     </tr>
                   ) : (
-                    chapters.map(chapter => (
+                    filteredChapters.map(chapter => (
                       <tr key={chapter.chapterId || chapter.chapter_id}>
-                        <td>{chapter.name}</td>
-                        <td>{chapter.subjectName || chapter.subject}</td>
-                        <td>{chapter.description}</td>
+                        <td>{highlightText(chapter.name, searchTerm)}</td>
+                        <td>{highlightText(chapter.subjectName || chapter.subject, searchTerm)}</td>
+                        <td>{highlightText(chapter.description, searchTerm)}</td>
                         <td>{chapter.createdDate || chapter.CreatedDate}</td>
                         <td>{chapter.createdName || chapter.CreatedBy}</td>
                         <td>{chapter.modifiedName || chapter.ModifiedBy}</td>
