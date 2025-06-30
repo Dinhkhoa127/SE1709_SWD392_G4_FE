@@ -64,6 +64,78 @@ const deleteChapterAPI = async (chapterId) => {
     const URL_API = `/chapter/${chapterId}`;
     return instance.delete(URL_API);
 }
+
+// ArtifactType APIs
+const getArtifactTypesAPI = async () => {
+    const URL_API = "/artifactType";
+    return instance.get(URL_API);
+}
+
+const getArtifactTypeByIdAPI = async (artifactTypeId) => {
+    const URL_API = `/artifactType/${artifactTypeId}`;
+    return instance.get(URL_API);
+}
+
+const createArtifactTypeAPI = async (artifactTypeData) => {
+    const URL_API = "/artifactType";
+    return instance.post(URL_API, artifactTypeData);
+}
+
+const updateArtifactTypeAPI = async (artifactTypeData) => {
+    const URL_API = "/artifactType";
+    return instance.put(URL_API, artifactTypeData);
+}
+
+const deleteArtifactTypeAPI = async (artifactTypeId) => {
+    const URL_API = `/artifactType/${artifactTypeId}`;
+    return instance.delete(URL_API);
+}
+const getTopicsAPI = async () => {
+    const URL_API = "/topic";
+    return instance.get(URL_API);
+}
+const getTopicByIdAPI = async (topicId) => {
+    const URL_API = `/topic/${topicId}`;
+    return instance.get(URL_API);
+}
+
+// Artifact APIs
+const getArtifactsAPI = async () => {
+    const URL_API = "/artifact";
+    return instance.get(URL_API);
+}
+
+const getArtifactByIdAPI = async (artifactId) => {
+    const URL_API = `/artifact/${artifactId}`;
+    return instance.get(URL_API);
+}
+
+// ArtifactMedia APIs
+const getArtifactMediaAPI = async () => {
+    const URL_API = "/artifactMedia";
+    return instance.get(URL_API);
+}
+
+const getArtifactMediaByIdAPI = async (artifactMediaId) => {
+    const URL_API = `/artifactMedia/${artifactMediaId}`;
+    return instance.get(URL_API);
+}
+
+const createArtifactMediaAPI = async (artifactMediaData) => {
+    const URL_API = "/artifactMedia";
+    return instance.post(URL_API, artifactMediaData);
+}
+
+const updateArtifactMediaAPI = async (artifactMediaData) => {
+    const URL_API = "/artifactMedia";
+    return instance.put(URL_API, artifactMediaData);
+}
+
+const deleteArtifactMediaAPI = async (artifactMediaId) => {
+    const URL_API = `/artifactMedia/${artifactMediaId}`;
+    return instance.delete(URL_API);
+}
+
 export { 
     loginAPI, 
     loginGoogleAPI,
@@ -78,4 +150,18 @@ export {
     createChapterAPI,
     updateChapterAPI,
     deleteChapterAPI,
+    getArtifactTypesAPI,
+    getArtifactTypeByIdAPI,
+    createArtifactTypeAPI,
+    updateArtifactTypeAPI,
+    deleteArtifactTypeAPI,
+    getTopicsAPI,
+    getTopicByIdAPI,
+    getArtifactsAPI,
+    getArtifactByIdAPI,
+    getArtifactMediaAPI,
+    getArtifactMediaByIdAPI,
+    createArtifactMediaAPI,
+    updateArtifactMediaAPI,
+    deleteArtifactMediaAPI,
 };
