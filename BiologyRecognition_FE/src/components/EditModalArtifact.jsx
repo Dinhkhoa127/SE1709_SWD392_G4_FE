@@ -44,7 +44,6 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   // Load initial data when modal opens or initialData changes
   useEffect(() => {
     if (open && initialData) {
-      console.log('🔍 EditModalArtifact - initialData:', initialData);
       setForm({
         name: initialData.artifactName || initialData.name || '',
         description: initialData.description || '',
@@ -93,15 +92,12 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchSubjects = async () => {
     try {
       setLoadingStates(prev => ({ ...prev, subjects: true }));
-      console.log('🔍 Fetching subjects...');
       const response = await getSubjectsAPI();
-      console.log('✅ Subjects response:', response);
       setDropdownData(prev => ({
         ...prev,
         subjects: response.data || response || []
       }));
     } catch (error) {
-      console.error('❌ Error fetching subjects:', error);
       toast.error('Lỗi khi tải danh sách môn học');
       setDropdownData(prev => ({ ...prev, subjects: [] }));
     } finally {
@@ -112,15 +108,12 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchChaptersBySubject = async (subjectId) => {
     try {
       setLoadingStates(prev => ({ ...prev, chapters: true }));
-      console.log('🔍 Fetching chapters for subjectId:', subjectId);
       const response = await getChaptersBySubjectAPI(subjectId);
-      console.log('✅ Chapters response:', response);
       setDropdownData(prev => ({
         ...prev,
         chapters: response.data || response || []
       }));
     } catch (error) {
-      console.error('❌ Error fetching chapters:', error);
       toast.error('Lỗi khi tải danh sách chương');
       setDropdownData(prev => ({ ...prev, chapters: [] }));
     } finally {
@@ -131,15 +124,12 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchTopicsByChapter = async (chapterId) => {
     try {
       setLoadingStates(prev => ({ ...prev, topics: true }));
-      console.log('🔍 Fetching topics for chapterId:', chapterId);
       const response = await getTopicsByChapterAPI(chapterId);
-      console.log('✅ Topics response:', response);
       setDropdownData(prev => ({
         ...prev,
         topics: response.data || response || []
       }));
     } catch (error) {
-      console.error('❌ Error fetching topics:', error);
       toast.error('Lỗi khi tải danh sách chủ đề');
       setDropdownData(prev => ({ ...prev, topics: [] }));
     } finally {
@@ -150,15 +140,12 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchArtifactTypesByTopic = async (topicId) => {
     try {
       setLoadingStates(prev => ({ ...prev, artifactTypes: true }));
-      console.log('🔍 Fetching artifact types for topicId:', topicId);
       const response = await getArtifactTypesByTopicAPI(topicId);
-      console.log('✅ Artifact types response:', response);
       setDropdownData(prev => ({
         ...prev,
         artifactTypes: response.data || response || []
       }));
     } catch (error) {
-      console.error('❌ Error fetching artifact types:', error);
       toast.error('Lỗi khi tải danh sách loại mẫu vật');
       setDropdownData(prev => ({ ...prev, artifactTypes: [] }));
     } finally {
@@ -227,7 +214,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
         modifiedBy: currentUser.userAccountId || currentUser.id || currentUser.userId || currentUser.user_id,
       };
       
-      console.log('📤 Updating artifact with data:', updateData);
+
       onSubmit(updateData);
     }
   };

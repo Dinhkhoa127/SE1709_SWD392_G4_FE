@@ -2,50 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
-import { getChaptersAPI } from '../redux/services/apiService';
+import { fetchSubjects } from '../redux/thunks/subjectThunks';
 import '../styles/CreateModal.css';
-
-const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
+const CreateModalChapter = ({ open, onClose, onSubmit, loading, subjects = [], isChapter = false }) => {
     const dispatch = useDispatch();
     const { currentUser } = useSelector(state => state.user);
+    const { subjects: subjectsFromStore } = useSelector(state => state.subjects);
+    
+    // Use subjects from Redux store if available, otherwise use props
+    const availableSubjects = subjectsFromStore && subjectsFromStore.length > 0 ? subjectsFromStore : subjects;
     
     const [form, setForm] = useState({
         name: '',
-        chapterId: '',
-        description: ''
+        description: '',
+        subjectId: ''
     });
 
-    const [chapters, setChapters] = useState([]);
-    const [chaptersLoading, setChaptersLoading] = useState(false);
-
-    // Fetch current user and chapters when modal opens
+    // Fetch current user when modal opens
     useEffect(() => {
-        if (open) {
-            if (!currentUser) {
-                dispatch(fetchCurrentUser());
-            }
-            fetchChapters();
+        if (open && !currentUser) {
+            dispatch(fetchCurrentUser());
         }
     }, [open, currentUser, dispatch]);
 
-    const fetchChapters = async () => {
-        try {
-            setChaptersLoading(true);
-            const response = await getChaptersAPI();
-            setChapters(response.data || response || []);
-        } catch (error) {
-
-            toast.error('Không thể tải danh sách chương!');
-            setChapters([]);
-        } finally {
-            setChaptersLoading(false);
+    // Fetch subjects when modal opens
+    useEffect(() => {
+        if (open && isChapter) {
+            dispatch(fetchSubjects());
         }
-    };
+    }, [open, isChapter, dispatch]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
-
     const handleSubmit = (e) => {
         e.preventDefault();
         
@@ -61,32 +50,39 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
             return;
         }
 
-        if (!form.chapterId) {
-            toast.error('Vui lòng chọn chương!');
-            return;
+        let data;
+        if (isChapter) {
+            if (!form.subjectId) {
+                toast.error('Vui lòng chọn môn học!');
+                return;
+            }
+            data = {
+                subjectId: Number(form.subjectId),
+                name: form.name,
+                description: form.description,
+                createdBy: userId
+            };
+        } else {
+            data = {
+                name: form.name,
+                description: form.description,
+                createdBy: userId
+            };
         }
 
-        const topicData = {
-            name: form.name,
-            chapterId: parseInt(form.chapterId),
-            description: form.description,
-            createdBy: userId
-        };
-
-        onSubmit(topicData);
-        
+        onSubmit(data);
         setForm({
             name: '',
-            chapterId: '',
-            description: ''
+            description: '',
+            subjectId: ''
         });
     };
 
     const handleClose = () => {
         setForm({
             name: '',
-            chapterId: '',
-            description: ''
+            description: '',
+            subjectId: ''
         });
         onClose();
     };
@@ -96,56 +92,40 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
     return (
         <div className="create-modal-overlay">
             <div className="create-modal-content create-modal">
-                <div className="create-modal-title">Tạo chủ đề mới</div>
+                <div className="create-modal-title">{isChapter ? 'Tạo chương mới' : 'Tạo môn học mới'}</div>
                 <button className="close-btn" onClick={handleClose} aria-label="Đóng">
                     <i className="fas fa-times"></i>
                 </button>
                 <form className="create-modal-form" onSubmit={handleSubmit}>
+                    {isChapter && (
+                        <div className="form-group full-width">
+                            <label>Môn học *</label>
+                            <select name="subjectId" value={form.subjectId} onChange={handleChange} required>
+                                <option value="">-- Chọn môn học --</option>
+                                {availableSubjects.map(sub => (
+                                    <option key={sub.subject_id || sub.subjectId} value={sub.subject_id || sub.subjectId}>{sub.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <div className="form-group full-width">
-                        <label>Tên chủ đề *</label>
+                        <label>{isChapter ? 'Tên chương *' : 'Tên môn học *'}</label>
                         <textarea 
                             name="name" 
                             value={form.name} 
                             onChange={handleChange}
-                            placeholder="Nhập tên chủ đề"
+                            placeholder={isChapter ? 'Nhập tên chương' : 'Nhập tên môn học'}
                             rows="2"
                             required
                         />
                     </div>
                     <div className="form-group full-width">
-                        <label>Chương *</label>
-                        <select 
-                            name="chapterId" 
-                            value={form.chapterId} 
-                            onChange={handleChange}
-                            required
-                            disabled={chaptersLoading}
-                        >
-                            <option value="">
-                                {chaptersLoading ? 'Đang tải chương...' : 'Chọn chương'}
-                            </option>
-                            {chapters.map(chapter => (
-                                <option 
-                                    key={chapter.chapterId || chapter.chapter_id} 
-                                    value={chapter.chapterId || chapter.chapter_id}
-                                >
-                                    {chapter.name}
-                                </option>
-                            ))}
-                        </select>
-                        {chaptersLoading && (
-                            <div className="loading-indicator">
-                                <i className="fas fa-spinner fa-spin"></i> Đang tải danh sách chương...
-                            </div>
-                        )}
-                    </div>
-                    <div className="form-group full-width">
-                        <label>Mô tả *</label>
+                        <label>{isChapter ? 'Mô tả *' : 'Mô tả *'}</label>
                         <textarea 
                             name="description" 
                             value={form.description} 
                             onChange={handleChange}
-                            placeholder="Nhập mô tả chủ đề"
+                            placeholder={isChapter ? 'Nhập mô tả chương' : 'Nhập mô tả môn học'}
                             rows="4"
                             required
                         />
@@ -162,7 +142,7 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
                         <button 
                             type="submit" 
                             className="btn btn-primary"
-                            disabled={loading || !form.name.trim() || !form.chapterId || !form.description.trim() || chaptersLoading}
+                            disabled={loading || !form.name.trim() || !form.description.trim() || (isChapter && !form.subjectId)}
                         >
                             {loading ? (
                                 <>
@@ -179,4 +159,4 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
     );
 };
 
-export default CreateModalTopic;
+export default CreateModalChapter;

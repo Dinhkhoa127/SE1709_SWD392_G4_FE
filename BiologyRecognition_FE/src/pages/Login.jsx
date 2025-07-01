@@ -21,17 +21,19 @@ const handleSubmit = async (e) => {
 
         try {
             const response = await loginAPI(username, password);
-            console.log('Full response:', response);
             
             // Kiểm tra response dựa trên structure thực tế từ API
             if (response && response.userAccountId) {
-                console.log('Đăng nhập thành công:', response);
+                // Lưu thông tin user vào localStorage
+                localStorage.setItem('currentUser', JSON.stringify(response));
+                if (response.accessToken) {
+                    localStorage.setItem('accessToken', response.accessToken);
+                }
                 
                 // Lưu thông tin user vào Redux store
                 dispatch(fetchCurrentUserSuccess(response));
                 
                 // Chuyển trang về AdminPage sau khi login thành công
-                console.log('Attempting to navigate to /admin');
                 navigate('/admin', { replace: true });
                 // Backup method nếu navigate không hoạt động
                 setTimeout(() => {
@@ -41,7 +43,6 @@ const handleSubmit = async (e) => {
                 setError('Đăng nhập thất bại - Thông tin không hợp lệ');
             }
         } catch (error) {
-            console.error('Đăng nhập thất bại:', error);
             setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
         } finally {
             setIsLoading(false);
@@ -54,16 +55,13 @@ const handleSubmit = async (e) => {
 
         try {
             const response = await loginGoogleAPI();
-            console.log(response);
             if (response.status === 200) {
-                console.log('Đăng nhập Google thành công:', response);
                 // Chuyển trang về AdminPage sau khi login Google thành công
                 navigate('/admin');
             } else {
                 setError(response.message);
             }
         } catch (error) {
-            console.error('Đăng nhập Google thất bại:', error);
             setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
         } finally {
             setIsLoading(false);

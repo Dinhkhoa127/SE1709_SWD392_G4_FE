@@ -51,7 +51,7 @@ const EditModalTopic = ({ open, onClose, onSubmit, initialData, loading }) => {
       const response = await getChaptersAPI();
       setChapters(response || []);
     } catch (error) {
-      console.error('Error fetching chapters:', error);
+
       toast.error('Lỗi khi tải danh sách chương');
       setChapters([]);
     } finally {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
@@ -14,14 +14,17 @@ import '../styles/ArticlesPage.css';
 const ArticlesPage = () => {
   // Redux
   const dispatch = useDispatch();
-  const { articles = [], loading = false, error = null, deleting = false, creating = false, updating = false } = useSelector((state) => state.articles || {});
-  const { artifacts = [] } = useSelector((state) => state.artifacts || {});
+  const articlesState = useSelector((state) => state.articles || {});
+  const { articles = [], loading = false, error = null, deleting = false, creating = false, updating = false } = articlesState;
+  const artifactsState = useSelector((state) => state.artifacts || {});
+  const { artifacts = [] } = artifactsState;
 
   // Local state
   const [showDelete, setShowDelete] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -55,12 +58,61 @@ const ArticlesPage = () => {
       return 'Không có';
     }
     
+    // Defensive check for artifacts array
+    if (!artifacts || !Array.isArray(artifacts)) {
+      return 'Đang tải...';
+    }
+    
     const names = artifactIds.map(id => {
-      const artifact = artifacts.find(art => art.artifactId === id);
+      const artifact = artifacts.find(art => art && art.artifactId === id);
       return artifact ? artifact.artifactName : `ID: ${id}`;
     });
     
     return names.join(', ');
+  };
+
+  // Filter articles based on search term with error handling
+  const filteredArticles = useMemo(() => {
+    try {
+      if (!articles || !Array.isArray(articles)) {
+        return [];
+      }
+      
+      return articles.filter(article => {
+        // Defensive check for article object
+        if (!article || typeof article !== 'object') {
+          return false;
+        }
+        
+        if (!searchTerm) return true;
+        
+        const title = article.title || '';
+        const content = article.content || '';
+        const artifactNames = getArtifactNames(article.artifactIds) || '';
+        
+        return (
+          title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          artifactNames.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      });
+    } catch (error) {
+      return [];
+    }
+  }, [articles, searchTerm, artifacts]);
+  
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
   };
 
   // Handle delete article
@@ -94,7 +146,9 @@ const ArticlesPage = () => {
       setShowCreate(false);
       
       // Force immediate refresh to ensure UI update
-      dispatch(fetchArticlesThunk());
+      setTimeout(() => {
+        dispatch(fetchArticlesThunk());
+      }, 100);
       
     } catch (error) {
       toast.error('Có lỗi xảy ra khi tạo bài viết!');
@@ -116,7 +170,9 @@ const ArticlesPage = () => {
       setSelectedArticle(null);
       
       // Force immediate refresh to ensure UI update
-      dispatch(fetchArticlesThunk());
+      setTimeout(() => {
+        dispatch(fetchArticlesThunk());
+      }, 100);
       
     } catch (error) {
       toast.error('Có lỗi xảy ra khi cập nhật bài viết!');
@@ -154,8 +210,35 @@ const ArticlesPage = () => {
               </button>
              
             </div>
-
-          
+            
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tiêu đề, nội dung hoặc mẫu vật liên quan..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredArticles.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
+            </div>
             
             {/* Error state */}
             {error && (
@@ -180,26 +263,25 @@ const ArticlesPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(!articles || articles.length === 0) && !loading ? (
+                  {(filteredArticles.length === 0 && !loading) ? (
                     <tr>
                       <td colSpan="8" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
-                        Không có dữ liệu bài viết
+                        {searchTerm ? `Không tìm thấy bài viết nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu bài viết'}
                       </td>
                     </tr>
                   ) : (
-                    articles && Array.isArray(articles) && articles.map(article => {
+                    filteredArticles.map(article => {
                       // Defensive check for article object
                       if (!article || typeof article !== 'object') {
-                        console.warn('⚠️ Invalid article object:', article);
                         return null;
                       }
                       
                       return (
                         <tr key={article.articleId || article.article_id || Math.random()}>
-                          <td>{article.title || 'N/A'}</td>
+                          <td>{highlightText(article.title, searchTerm) || 'N/A'}</td>
                           <td title={article.content || ''}>
                             {article.content && article.content.length > 100
                               ? `${article.content.substring(0, 100)}...`

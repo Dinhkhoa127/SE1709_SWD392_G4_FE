@@ -2,13 +2,14 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import SubjectsPage from "./pages/SubjectsPage";
 import TopicsPage from "./pages/TopicsPage.jsx";
 import ChaptersPage from "./pages/ChaptersPage";
 import ArtifactsPage from "./pages/ArtifactsPage";
 import ArtifactTypesPage from "./pages/ArtifactTypesPage.jsx";
-import ArtifactImagesPage from "./pages/ArtifactImagesPage.jsx";
+import ArtifactMediasPage from "./pages/ArtifactMediasPage.jsx";
 import ArticlesPage from "./pages/ArticlesPage";
 import UsersPage from "./pages/UsersPage.jsx";
 import SettingsPage from "./pages/SettingsPage";
@@ -22,18 +23,58 @@ function App() {
     <>
       <BrowserRouter basename={import.meta.env.VITE_BASE_PATH}>
         <Routes>
-          <Route path="/admin" element={<AdminPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Login />} />
-          <Route path="/subjects" element={<SubjectsPage />} />
-          <Route path="/topics" element={<TopicsPage />} />
-          <Route path="/chapters" element={<ChaptersPage />} />
-          <Route path="/artifacts" element={<ArtifactsPage />} />
-          <Route path="/artifact-types" element={<ArtifactTypesPage />} />
-          <Route path="/artifact-images" element={<ArtifactImagesPage />} />
-          <Route path="/articles" element={<ArticlesPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/users" element={<UsersPage />} />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/subjects" element={
+            <ProtectedRoute>
+              <SubjectsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/topics" element={
+            <ProtectedRoute>
+              <TopicsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/chapters" element={
+            <ProtectedRoute>
+              <ChaptersPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/artifacts" element={
+            <ProtectedRoute>
+              <ArtifactsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/artifact-types" element={
+            <ProtectedRoute>
+              <ArtifactTypesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/artifact-medias" element={
+            <ProtectedRoute>
+              <ArtifactMediasPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/articles" element={
+            <ProtectedRoute>
+              <ArticlesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute>
+              <UsersPage />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

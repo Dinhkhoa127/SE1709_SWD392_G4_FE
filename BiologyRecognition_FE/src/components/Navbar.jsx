@@ -13,7 +13,7 @@ const Navbar = ({ activeSection, isCollapsed }) => {
     { id: 'chapters', icon: 'fas fa-bookmark', text: 'Chương', path: '/chapters' },
     { id: 'artifacts', icon: 'fas fa-microscope', text: 'Mẫu sinh vật', path: '/artifacts' },
     { id: 'artifact-types', icon: 'fa-solid fa-seedling', text: 'Loại mẫu sinh vật', path: '/artifact-types' },
-    { id: 'artifact-images', icon: 'fas fa-image', text: 'Hình ảnh mẫu sinh vật', path: '/artifact-images' },
+    { id: 'artifact-medias', icon: 'fas fa-image', text: 'Hình ảnh mẫu sinh vật', path: '/artifact-medias' },
     { id: 'articles', icon: 'fas fa-newspaper', text: 'Bài báo', path: '/articles' },
     { id: 'settings', icon: 'fas fa-cog', text: 'Cài đặt', path: '/settings' }
   ];

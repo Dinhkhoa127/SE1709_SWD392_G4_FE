@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import '../styles/AdminPage.css';
+import '../styles/SubjectsPage.css';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 import CreateModalArtifact from '../components/CreateModalArtifact.jsx';
@@ -18,6 +18,7 @@ const ArtifactsPage = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -84,7 +85,7 @@ const ArtifactsPage = () => {
         setSelectedArtifact(null);
         toast.success('Cập nhật mẫu vật thành công!');
       } catch (error) {
-        console.error('❌ Error updating artifact:', error);
+
         toast.error('Có lỗi xảy ra khi cập nhật mẫu vật!');
       }
     }
@@ -104,6 +105,28 @@ const ArtifactsPage = () => {
       }
     };
   }, [dispatch, error]);
+
+  // Filter artifacts based on search term with defensive check
+  const filteredArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter(artifact =>
+    artifact?.artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    artifact?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    artifact?.scientificName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    artifact?.artifactTypeName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
+  };
 
   return (
     <>
@@ -140,8 +163,38 @@ const ArtifactsPage = () => {
               </button>
              
             </div>
+            
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên mẫu vật, mô tả, tên khoa học hoặc loại mẫu vật..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredArtifacts.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
+            </div>
+            
             <div className="table-responsive">
-              {loading && (!artifacts || artifacts.length === 0) ? (
+              {loading && (!filteredArtifacts || filteredArtifacts.length === 0) ? (
                 <div className="text-center py-4">
                   <i className="fas fa-spinner fa-spin fa-2x"></i>
                   <p className="mt-2">Đang tải dữ liệu...</p>
@@ -158,24 +211,24 @@ const ArtifactsPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {(!artifacts || artifacts.length === 0) && !loading ? (
+                    {(!filteredArtifacts || filteredArtifacts.length === 0) && !loading ? (
                       <tr>
                         <td colSpan="5" className="text-center py-4">
                           <i className="fas fa-inbox fa-2x mb-2"></i>
-                          <p>Không có dữ liệu mẫu vật</p>
+                          <p>{searchTerm ? `Không tìm thấy mẫu vật nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu mẫu vật'}</p>
                         </td>
                       </tr>
                     ) : (
-                      artifacts && artifacts.map(artifact => (
+                      filteredArtifacts && filteredArtifacts.map(artifact => (
                         <tr key={artifact.artifactId}>
-                          <td>{artifact.artifactName || 'N/A'}</td>
+                          <td>{highlightText(artifact.artifactName, searchTerm) || 'N/A'}</td>
                           <td title={artifact.description || ''}>
                             {artifact.description && artifact.description.length > 100
-                              ? `${artifact.description.substring(0, 100)}...`
-                              : (artifact.description || 'Không có mô tả')}
+                              ? highlightText(`${artifact.description.substring(0, 100)}...`, searchTerm)
+                              : (highlightText(artifact.description, searchTerm) || 'Không có mô tả')}
                           </td>
-                          <td>{artifact.scientificName || 'N/A'}</td>
-                          <td>{artifact.artifactTypeName || 'N/A'}</td>
+                          <td>{highlightText(artifact.scientificName, searchTerm) || 'N/A'}</td>
+                          <td>{highlightText(artifact.artifactTypeName, searchTerm) || 'N/A'}</td>
                           <td>
                             <button 
                               className="btn btn-sm btn-edit" 

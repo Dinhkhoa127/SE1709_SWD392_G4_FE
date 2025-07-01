@@ -15,7 +15,7 @@ import '../styles/TopicsPage.css';
 
 const TopicsPage = () => {
   const dispatch = useDispatch();
-  const { topics, selectedTopic: storeSelectedTopic, loading, error, createLoading, updateLoading, deleteLoading, fetchTopicLoading } = useSelector(state => state.topics);
+  const { topics = [], selectedTopic: storeSelectedTopic, loading, error, createLoading, updateLoading, deleteLoading, fetchTopicLoading } = useSelector(state => state.topics || {});
   const { currentUser } = useSelector(state => state.user);
   
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
@@ -27,6 +27,7 @@ const TopicsPage = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch topics and current user when component mount
   useEffect(() => {
@@ -39,6 +40,27 @@ const TopicsPage = () => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
+  };
+
+  // Filter topics based on search term
+  const filteredTopics = (Array.isArray(topics) ? topics : []).filter(topic =>
+    topic.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (topic.chapterName || topic.chapter)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    topic.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
   };
 
   // Handlers
@@ -71,7 +93,7 @@ const TopicsPage = () => {
       const topicId = topicToUpdate.topicId || topicToUpdate.topic_id;
       
       if (!topicId) {
-        console.error("Lỗi: Không tìm thấy ID của chủ đề!");
+
         return;
       }
       
@@ -133,7 +155,34 @@ const TopicsPage = () => {
               </button>
             </div>
             
-           
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên chủ đề, chương hoặc mô tả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredTopics.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
+            </div>
             
             {/* Error state */}
             {error && (
@@ -158,7 +207,7 @@ const TopicsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {!loading && topics.length === 0 ? (
+                  {!loading && filteredTopics.length === 0 ? (
                     <tr>
                       <td colSpan="8" className="empty-state">
                         <div className="empty-state-icon">
@@ -168,11 +217,11 @@ const TopicsPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    topics.map(topic => (
+                    filteredTopics.map(topic => (
                       <tr key={topic.topicId || topic.topic_id}>
-                        <td>{topic.name}</td>
-                        <td>{topic.chapterName || topic.chapter}</td>
-                        <td>{topic.description}</td>
+                        <td>{highlightText(topic.name, searchTerm)}</td>
+                        <td>{highlightText(topic.chapterName || topic.chapter, searchTerm)}</td>
+                        <td>{highlightText(topic.description, searchTerm)}</td>
                         <td>{topic.createdDate || topic.CreatedDate}</td>
                         <td>{topic.createdName || topic.CreatedBy}</td>
                         <td>{topic.modifiedName || topic.ModifiedBy}</td>

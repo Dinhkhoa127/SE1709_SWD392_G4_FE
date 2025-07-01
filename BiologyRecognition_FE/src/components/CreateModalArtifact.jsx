@@ -72,15 +72,12 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchSubjects = async () => {
         try {
             setLoadingStates(prev => ({ ...prev, subjects: true }));
-            console.log('🔍 Fetching subjects...');
             const response = await getSubjectsAPI();
-            console.log('✅ Subjects response:', response);
             setDropdownData(prev => ({
                 ...prev,
                 subjects: response.data || response || []
             }));
         } catch (error) {
-            console.error('❌ Error fetching subjects:', error);
             toast.error('Không thể tải danh sách môn học!');
             setDropdownData(prev => ({ ...prev, subjects: [] }));
         } finally {
@@ -91,9 +88,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchChaptersBySubject = async (subjectId) => {
         try {
             setLoadingStates(prev => ({ ...prev, chapters: true }));
-            console.log('🔍 Fetching chapters for subjectId:', subjectId);
             const response = await getChaptersBySubjectAPI(subjectId);
-            console.log('✅ Chapters response:', response);
             setDropdownData(prev => ({
                 ...prev,
                 chapters: response.data || response || [],
@@ -108,7 +103,6 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
                 artifactTypeId: ''
             }));
         } catch (error) {
-            console.error('❌ Error fetching chapters:', error);
             toast.error('Không thể tải danh sách chương!');
             setDropdownData(prev => ({ 
                 ...prev, 
@@ -124,9 +118,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchTopicsByChapter = async (chapterId) => {
         try {
             setLoadingStates(prev => ({ ...prev, topics: true }));
-            console.log('🔍 Fetching topics for chapterId:', chapterId);
             const response = await getTopicsByChapterAPI(chapterId);
-            console.log('✅ Topics response:', response);
             setDropdownData(prev => ({
                 ...prev,
                 topics: response.data || response || [],
@@ -139,7 +131,6 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
                 artifactTypeId: ''
             }));
         } catch (error) {
-            console.error('❌ Error fetching topics:', error);
             toast.error('Không thể tải danh sách chủ đề!');
             setDropdownData(prev => ({ 
                 ...prev, 
@@ -154,9 +145,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchArtifactTypesByTopic = async (topicId) => {
         try {
             setLoadingStates(prev => ({ ...prev, artifactTypes: true }));
-            console.log('🔍 Fetching artifact types for topicId:', topicId);
             const response = await getArtifactTypesByTopicAPI(topicId);
-            console.log('✅ Artifact types response:', response);
             setDropdownData(prev => ({
                 ...prev,
                 artifactTypes: response.data || response || []
@@ -167,7 +156,6 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
                 artifactTypeId: ''
             }));
         } catch (error) {
-            console.error('❌ Error fetching artifact types:', error);
             toast.error('Không thể tải danh sách loại mẫu vật!');
             setDropdownData(prev => ({ ...prev, artifactTypes: [] }));
         } finally {
@@ -192,28 +180,20 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        console.log('🚀 Starting artifact creation...');
-        console.log('📊 Current form state:', form);
-        console.log('👤 Current user:', currentUser);
-        
         if (!currentUser) {
-            console.error('❌ No current user found');
             toast.error('Không thể lấy thông tin người dùng hiện tại!');
             return;
         }
 
         const userId = currentUser.userAccountId || currentUser.id || currentUser.userId || currentUser.user_id;
-        console.log('🆔 Extracted userId:', userId);
         
         if (!userId) {
-            console.error('❌ Could not extract userId from currentUser');
             toast.error('Không thể lấy ID người dùng hiện tại!');
             return;
         }
 
         // Validate required fields
         if (!form.artifactTypeId) {
-            console.error('❌ Missing artifactTypeId');
             toast.error('Vui lòng chọn loại mẫu vật!');
             return;
         }
@@ -225,24 +205,6 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
             artifactTypeId: parseInt(form.artifactTypeId),
             createdBy: userId
         };
-
-        console.log('📤 Sending artifact data:', artifactData);
-        console.log('📤 Data types:', {
-            artifactName: typeof artifactData.artifactName,
-            description: typeof artifactData.description,
-            scientificName: typeof artifactData.scientificName,
-            artifactTypeId: typeof artifactData.artifactTypeId,
-            createdBy: typeof artifactData.createdBy
-        });
-        console.log('📤 Data validation checks:', {
-            artifactNameValid: artifactData.name && artifactData.name.trim().length > 0,
-            descriptionValid: artifactData.description && artifactData.description.trim().length > 0,
-            scientificNameValid: artifactData.scientificName && artifactData.scientificName.trim().length > 0,
-            artifactTypeIdValid: !isNaN(artifactData.artifactTypeId) && artifactData.artifactTypeId > 0,
-            createdByValid: !isNaN(artifactData.createdBy) && artifactData.createdBy > 0
-        });
-        console.log('📤 Full form state at submission:', form);
-        console.log('📤 Dropdown data at submission:', dropdownData);
 
         onSubmit(artifactData);
         

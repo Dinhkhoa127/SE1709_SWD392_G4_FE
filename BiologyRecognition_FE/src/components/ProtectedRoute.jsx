@@ -18,14 +18,32 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     // Kiểm tra authentication sau khi khôi phục user
     const storedUser = localStorage.getItem('currentUser');
-    if (!currentUser && !storedUser && !loading) {
-      // Nếu không có user và không đang loading, redirect về login
+    const storedToken = localStorage.getItem('accessToken');
+    
+    // Nếu không có dữ liệu trong localStorage, redirect về login
+    if (!storedUser || !storedToken) {
       navigate('/login', { replace: true });
+      return;
     }
-  }, [currentUser, loading, navigate]);
+    
+    // Nếu có dữ liệu trong localStorage nhưng Redux chưa có currentUser
+    // Và không đang loading, thì restore từ localStorage
+    if (!currentUser && !loading) {
+      dispatch(restoreUserFromStorage());
+    }
+  }, [currentUser, loading, navigate, dispatch]);
 
-  // Hiển thị loading spinner khi đang kiểm tra authentication
-  if (loading || (!currentUser && localStorage.getItem('currentUser'))) {
+  // Kiểm tra localStorage trước
+  const storedUser = localStorage.getItem('currentUser');
+  const storedToken = localStorage.getItem('accessToken');
+  
+  // Nếu không có dữ liệu trong localStorage, không hiển thị gì
+  if (!storedUser || !storedToken) {
+    return null;
+  }
+
+  // Nếu có localStorage nhưng chưa có currentUser trong Redux, hiển thị loading
+  if (!currentUser && (loading || storedUser)) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -40,12 +58,11 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // Nếu đã có user, hiển thị component con
-  if (currentUser) {
+  // Nếu đã có user hoặc có dữ liệu localStorage, hiển thị component con
+  if (currentUser || storedUser) {
     return children;
   }
 
-  // Fallback case
   return null;
 };
 

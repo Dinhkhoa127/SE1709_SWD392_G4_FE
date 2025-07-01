@@ -86,6 +86,26 @@ const getChaptersBySubjectAPI = async (subjectId) => {
     return instance.get(URL_API);
 }
 
+const getChapterByIdAPI = async (chapterId) => {
+    const URL_API = `/chapter/${chapterId}`;
+    return instance.get(URL_API);
+}
+
+const createChapterAPI = async (chapterData) => {
+    const URL_API = "/chapter";
+    return instance.post(URL_API, chapterData);
+}
+
+const updateChapterAPI = async (chapterData) => {
+    const URL_API = "/chapter";
+    return instance.put(URL_API, chapterData);
+}
+
+const deleteChapterAPI = async (chapterId) => {
+    const URL_API = `/chapter/${chapterId}`;
+    return instance.delete(URL_API);
+}
+
 // Artifact APIs
 const getArtifactsAPI = async () => {
     const URL_API = "/artifact";
@@ -114,13 +134,60 @@ const deleteArtifactAPI = async (artifactId) => {
 
 // Artifact Type APIs
 const getArtifactTypesAPI = async () => {
-    const URL_API = "/artifacttype";
+    const URL_API = "/artifactType";
     return instance.get(URL_API);
 }
 
+
 const getArtifactTypesByTopicAPI = async (topicId) => {
-    const URL_API = `/artifacttype/by-topic/${topicId}`;
+    const URL_API = `/artifactType/by-topic/${topicId}`;
     return instance.get(URL_API);
+}
+
+const getArtifactTypeByIdAPI = async (artifactTypeId) => {
+    const URL_API = `/artifactType/${artifactTypeId}`;
+    return instance.get(URL_API);
+}
+
+const createArtifactTypeAPI = async (artifactTypeData) => {
+    const URL_API = "/artifactType";
+    return instance.post(URL_API, artifactTypeData);
+}
+
+const updateArtifactTypeAPI = async (artifactTypeData) => {
+    const URL_API = "/artifactType";
+    return instance.put(URL_API, artifactTypeData);
+}
+
+const deleteArtifactTypeAPI = async (artifactTypeId) => {
+    const URL_API = `/artifactType/${artifactTypeId}`;
+    return instance.delete(URL_API);
+}
+
+// Artifact Media APIs
+const getArtifactMediaAPI = async () => {
+    const URL_API = "/artifactMedia";
+    return instance.get(URL_API);
+}
+
+const getArtifactMediaByIdAPI = async (artifactMediaId) => {
+    const URL_API = `/artifactMedia/${artifactMediaId}`;
+    return instance.get(URL_API);
+}
+
+const createArtifactMediaAPI = async (artifactMediaData) => {
+    const URL_API = "/artifactMedia";
+    return instance.post(URL_API, artifactMediaData);
+}
+
+const updateArtifactMediaAPI = async (artifactMediaData) => {
+    const URL_API = "/artifactMedia";
+    return instance.put(URL_API, artifactMediaData);
+}
+
+const deleteArtifactMediaAPI = async (artifactMediaId) => {
+    const URL_API = `/artifactMedia/${artifactMediaId}`;
+    return instance.delete(URL_API);
 }
 
 // Article APIs
@@ -149,33 +216,93 @@ const deleteArticleAPI = async (articleId) => {
     return instance.delete(URL_API);
 }
 
+// Users Management APIs
+const getUsersAPI = async () => {
+    const URL_API = "/user-accounts";
+    return instance.get(URL_API);
+}
+
+const getUserByIdAPI = async (userId) => {
+    const URL_API = `/user-accounts/${userId}`;
+    return instance.get(URL_API);
+}
+
+const createUserAPI = async (userData) => {
+    const URL_API = "/user";
+    return instance.post(URL_API, userData);
+}
+
+const updateUserAPI = async (userData) => {
+    const URL_API = "/user";
+    return instance.put(URL_API, userData);
+}
+
+const deleteUserAPI = async (userId) => {
+    const URL_API = `/user/${userId}`;
+    return instance.delete(URL_API);
+}
+
 export { 
     loginAPI, 
     loginGoogleAPI,
     getCurrentUserAPI,
+
+    // Subject APIs
     getSubjectsAPI,
     getSubjectByIdAPI,
     createSubjectAPI,
     updateSubjectAPI,
     deleteSubjectAPI,
+
+    // Topic APIs
     getTopicsAPI,
     getTopicsByChapterAPI,
     getTopicByIdAPI,
     createTopicAPI,
     updateTopicAPI,
     deleteTopicAPI,
+
+    // Chapter APIs
     getChaptersAPI,
     getChaptersBySubjectAPI,
+    getChapterByIdAPI,
+    createChapterAPI,
+    updateChapterAPI,
+    deleteChapterAPI,
+
+    // Artifact APIs
     getArtifactsAPI,
     getArtifactByIdAPI,
     createArtifactAPI,
     updateArtifactAPI,
     deleteArtifactAPI,
+
+    // Artifact Type APIs
     getArtifactTypesAPI,
     getArtifactTypesByTopicAPI,
+    createArtifactTypeAPI,
+    getArtifactTypeByIdAPI,
+    updateArtifactTypeAPI,
+    deleteArtifactTypeAPI,
+
+    //Artifact Media APIs
+    getArtifactMediaAPI,
+    getArtifactMediaByIdAPI,
+    createArtifactMediaAPI,
+    updateArtifactMediaAPI,
+    deleteArtifactMediaAPI,
+
+    // Article APIs
     getArticlesAPI,
     getArticleByIdAPI,
     createArticleAPI,
     updateArticleAPI,
-    deleteArticleAPI
+    deleteArticleAPI,
+
+    // User APIs
+    getUsersAPI,
+    getUserByIdAPI,
+    createUserAPI,
+    updateUserAPI,
+    deleteUserAPI
 };

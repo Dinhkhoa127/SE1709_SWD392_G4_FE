@@ -17,6 +17,13 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     NProgress.start();
+    
+    // Tự động thêm token vào header nếu có
+    const token = localStorage.getItem('accessToken'); // Sửa từ 'token' thành 'accessToken'
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     return config;
   },
   (error) => {
@@ -25,7 +32,7 @@ instance.interceptors.request.use(
   }
 );
 
-// Interceptor response: tắt NProgress
+// Interceptor response: tắt NProgress và xử lý lỗi authentication
 instance.interceptors.response.use(
   (response) => {
     NProgress.done();
@@ -33,6 +40,19 @@ instance.interceptors.response.use(
   },
   (error) => {
     NProgress.done();
+    
+    // Xử lý lỗi 401 (Unauthorized) - Token hết hạn hoặc không hợp lệ
+    if (error.response?.status === 401) {
+      // Clear localStorage và redirect về login
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('accessToken'); // Sửa từ 'token' thành 'accessToken'
+      
+      // Chỉ redirect nếu không phải ở trang login
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

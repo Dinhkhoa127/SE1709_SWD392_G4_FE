@@ -15,7 +15,7 @@ import '../styles/SubjectsPage.css';
 
 const SubjectsPage = () => {
   const dispatch = useDispatch();
-  const { subjects, selectedSubject: storeSelectedSubject, loading, error, createLoading, updateLoading, deleteLoading, fetchSubjectLoading } = useSelector(state => state.subjects);
+  const { subjects = [], selectedSubject: storeSelectedSubject, loading, error, createLoading, updateLoading, deleteLoading, fetchSubjectLoading } = useSelector(state => state.subjects || {});
   const { currentUser } = useSelector(state => state.user);
   
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
@@ -27,6 +27,7 @@ const SubjectsPage = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch subjects and current user when component mount
   useEffect(() => {
@@ -39,6 +40,26 @@ const SubjectsPage = () => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
+  };
+
+  // Filter subjects based on search term with defensive check
+  const filteredSubjects = (Array.isArray(subjects) ? subjects : []).filter(subject =>
+    subject?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    subject?.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Helper function to highlight search term in text
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">{part}</span>
+      ) : part
+    );
   };
 
   // Handlers
@@ -71,7 +92,7 @@ const SubjectsPage = () => {
       const subjectId = subjectToUpdate.subject_id || subjectToUpdate.subjectId;
       
       if (!subjectId) {
-        console.error("Lỗi: Không tìm thấy ID của môn học!");
+
         return;
       }
       
@@ -134,7 +155,34 @@ const SubjectsPage = () => {
               </button>
             </div>
             
-          
+            {/* Search Bar */}
+            <div className="search-container" style={{ marginBottom: 24 }}>
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên môn học hoặc mô tả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="clear-search-btn"
+                    title="Xóa tìm kiếm"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="search-results-info">
+                  Tìm thấy {filteredSubjects.length} kết quả cho "{searchTerm}"
+                </div>
+              )}
+            </div>
             
             {/* Error state */}
             {error && (
@@ -158,20 +206,20 @@ const SubjectsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {!loading && subjects.length === 0 ? (
+                  {!loading && filteredSubjects.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
-                        Không có dữ liệu môn học
+                        {searchTerm ? `Không tìm thấy môn học nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu môn học'}
                       </td>
                     </tr>
                   ) : (
-                    subjects.map((subject) => (
+                    filteredSubjects.map((subject) => (
                       <tr key={subject.subject_id}>
-                        <td className="col-name">{subject.name}</td>
-                        <td className="col-description">{subject.description}</td>
+                        <td className="col-name">{highlightText(subject.name, searchTerm)}</td>
+                        <td className="col-description">{highlightText(subject.description, searchTerm)}</td>
                         <td className="col-date">{subject.CreatedDate || subject.createdDate}</td>
                         <td className="col-user">{subject.CreatedBy || subject.createdName}</td>
                         <td className="col-user">{subject.ModifiedBy || subject.modifiedName}</td>
@@ -180,12 +228,12 @@ const SubjectsPage = () => {
                           <div className="action-buttons-container">
                             <button
                               className="btn-edit"
-                              title="Sửa"
+                              
                               onClick={() => handleEditSubject(subject)}
                               disabled={updateLoading}
                             >
                               <i className="fas fa-edit"></i>
-                              Sửa
+                             
                             </button>
                             <button 
                               className="btn-delete" 
@@ -194,7 +242,7 @@ const SubjectsPage = () => {
                               disabled={deleteLoading}
                             >
                               <i className="fas fa-trash"></i>
-                              Xóa
+                             
                             </button>
                           </div>
                         </td>

@@ -4,21 +4,21 @@ import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 
-import CreateModalArtifactType from '../components/CreateModalArtifactType.jsx';
-import EditModalArtifactType from '../components/EditModalArtifactType.jsx';
+import CreateModalArtifactMedia from '../components/CreateModalArtifactMedia.jsx';
+import EditModalArtifactMedia from '../components/EditModalArtifactMedia.jsx';
 import DeleteModal from '../components/DeleteModal.jsx';
 
-import { fetchArtifactTypes, fetchArtifactTypeById, createArtifactType, updateArtifactType, deleteArtifactType } from '../redux/thunks/artifactTypeThunks.jsx';
+import { fetchArtifactMedia, fetchArtifactMediaById, createArtifactMedia, updateArtifactMedia, deleteArtifactMedia } from '../redux/thunks/artifactMediaThunks.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
-import { fetchTopics } from '../redux/thunks/topicThunks.jsx';
+import { fetchArtifactTypes } from '../redux/thunks/artifactTypeThunks.jsx';
 
 import '../styles/SubjectsPage.css'; // Reusing existing styles
 
-const ArtifactTypePage = () => {
+const ArtifactMediasPage = () => {
   const dispatch = useDispatch();
-  const { artifactTypes = [], selectedArtifactType: storeSelectedArtifactType, loading, error, createLoading, updateLoading, deleteLoading, fetchArtifactTypeLoading } = useSelector(state => state.artifactTypes || {});
+  const { artifactMedia = [], selectedArtifactMedia, loading, error, createLoading, updateLoading, deleteLoading, fetchArtifactMediaLoading } = useSelector(state => state.artifactMedia || {});
   const { currentUser } = useSelector(state => state.user);
-  const { topics } = useSelector(state => state.topics);
+  const { artifactTypes } = useSelector(state => state.artifactTypes);
   
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -28,22 +28,24 @@ const ArtifactTypePage = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-  const [selectedArtifactType, setSelectedArtifactType] = useState(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Helper function to get topic name from topicId
-  const getTopicName = (topicId) => {
-    const topic = topics.find(t => t.topicId === topicId);
-    return topic ? topic.topicName || topic.name : `Topic ID: ${topicId}`;
+  // Helper function to get artifact name from artifactId
+  const getArtifactName = (artifactId) => {
+    const artifact = artifactTypes.find(a => a.artifactTypeId === artifactId);
+    return artifact ? artifact.name : `Artifact ID: ${artifactId}`;
   };
 
-  // Filter artifact types based on search term
-  const filteredArtifactTypes = (Array.isArray(artifactTypes) ? artifactTypes : []).filter(artifactType => {
-    const topicName = getTopicName(artifactType.topicId);
+  // Filter artifact media based on search term
+  const filteredArtifactMedia = (Array.isArray(artifactMedia) ? artifactMedia : []).filter(media => {
+    const artifactName = getArtifactName(media.artifactId);
     return (
-      artifactType.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      topicName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artifactType.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      media.artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      media.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      media.url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      media.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -61,11 +63,11 @@ const ArtifactTypePage = () => {
     );
   };
 
-  // Fetch artifact types and current user when component mount
+  // Fetch artifact media and current user when component mount
   useEffect(() => {
-    dispatch(fetchArtifactTypes());
+    dispatch(fetchArtifactMedia());
     dispatch(fetchCurrentUser());
-    dispatch(fetchTopics());
+    dispatch(fetchArtifactTypes());
   }, [dispatch]);
 
   // Lưu trạng thái collapsed vào localStorage khi thay đổi
@@ -76,49 +78,49 @@ const ArtifactTypePage = () => {
   };
 
   // Handlers
-  const handleCreateArtifactType = (artifactTypeData) => {
-    dispatch(createArtifactType(artifactTypeData))
+  const handleCreateArtifactMedia = (artifactMediaData) => {
+    dispatch(createArtifactMedia(artifactMediaData))
       .then(() => {
         setShowCreate(false);
-        toast.success('Tạo loại mẫu vật thành công!');
+        toast.success('Tạo media mẫu vật thành công!');
       })
       .catch(() => {
-        toast.error('Có lỗi xảy ra khi tạo loại mẫu vật!');
+        toast.error('Có lỗi xảy ra khi tạo media mẫu vật!');
       });
   };
 
-  const handleEditArtifactType = (artifactType) => {
-    setSelectedArtifactType(artifactType);
+  const handleEditArtifactMedia = (media) => {
+    setSelectedMedia(media);
     setShowEdit(true);
   };
 
-  const handleUpdateArtifactType = (artifactTypeData) => {
-    dispatch(updateArtifactType(artifactTypeData))
+  const handleUpdateArtifactMedia = (artifactMediaData) => {
+    dispatch(updateArtifactMedia(artifactMediaData))
       .then(() => {
         setShowEdit(false);
-        setSelectedArtifactType(null);
-        toast.success('Cập nhật loại mẫu vật thành công!');
+        setSelectedMedia(null);
+        toast.success('Cập nhật media mẫu vật thành công!');
       })
       .catch(() => {
-        toast.error('Có lỗi xảy ra khi cập nhật loại mẫu vật!');
+        toast.error('Có lỗi xảy ra khi cập nhật media mẫu vật!');
       });
   };
 
-  const handleDeleteArtifactType = (artifactType) => {
-    setSelectedArtifactType(artifactType);
+  const handleDeleteArtifactMedia = (media) => {
+    setSelectedMedia(media);
     setShowDelete(true);
   };
 
   const handleConfirmDelete = () => {
-    if (selectedArtifactType) {
-      dispatch(deleteArtifactType(selectedArtifactType.artifactTypeId))
+    if (selectedMedia) {
+      dispatch(deleteArtifactMedia(selectedMedia.artifactMediaId))
         .then(() => {
           setShowDelete(false);
-          setSelectedArtifactType(null);
-          toast.success('Xóa loại mẫu vật thành công!');
+          setSelectedMedia(null);
+          toast.success('Xóa media mẫu vật thành công!');
         })
         .catch(() => {
-          toast.error('Có lỗi xảy ra khi xóa loại mẫu vật!');
+          toast.error('Có lỗi xảy ra khi xóa media mẫu vật!');
         });
     }
   };
@@ -127,7 +129,7 @@ const ArtifactTypePage = () => {
     setShowCreate(false);
     setShowEdit(false);
     setShowDelete(false);
-    setSelectedArtifactType(null);
+    setSelectedMedia(null);
   };
 
   // Loading state
@@ -145,7 +147,7 @@ const ArtifactTypePage = () => {
     return (
       <div className="error-container">
         <p className="error-message">Lỗi: {error}</p>
-        <button className="btn btn-primary" onClick={() => dispatch(fetchArtifactTypes())}>
+        <button className="btn btn-primary" onClick={() => dispatch(fetchArtifactMedia())}>
           Thử lại
         </button>
       </div>
@@ -156,13 +158,13 @@ const ArtifactTypePage = () => {
     <>
       <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
       <div className={`admin-container${isCollapsed ? ' sidebar-hidden' : ''}`}>
-        <Navbar activeSection="artifact-types" isCollapsed={isCollapsed} />
-        <Header activeSection="artifact-types" isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
+        <Navbar activeSection="artifact-images" isCollapsed={isCollapsed} />
+        <Header activeSection="artifact-images" isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
             <div className="page-header">
-              <h1 className="page-title">Quản lý loại mẫu vật</h1>
-              <p className="page-description">Quản lý các loại mẫu vật sinh học</p>
+              <h1 className="page-title">Quản lý media mẫu vật</h1>
+              <p className="page-description">Quản lý hình ảnh, video, audio và tài liệu của các mẫu vật sinh học</p>
             </div>
             
             <div className="action-buttons" style={{ marginBottom: 24 }}>
@@ -172,7 +174,7 @@ const ArtifactTypePage = () => {
                 disabled={createLoading}
               >
                 <i className="fas fa-plus"></i> 
-                {createLoading ? 'Đang tạo...' : 'Thêm mới loại mẫu vật'}
+                {createLoading ? 'Đang tạo...' : 'Thêm mới media'}
               </button>
             </div>
 
@@ -182,7 +184,7 @@ const ArtifactTypePage = () => {
                 <i className="fas fa-search search-icon"></i>
                 <input
                   type="text"
-                  placeholder="Tìm kiếm theo tên bài, tên loại hoặc mô tả..."
+                  placeholder="Tìm kiếm theo tên tài liệu, mẫu vật, loại, URL hoặc mô tả..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="search-input"
@@ -200,7 +202,7 @@ const ArtifactTypePage = () => {
               </div>
               {searchTerm && (
                 <div className="search-results-info">
-                  Tìm thấy {filteredArtifactTypes.length} kết quả cho "{searchTerm}"
+                  Tìm thấy {filteredArtifactMedia.length} kết quả cho "{searchTerm}"
                 </div>
               )}
             </div>
@@ -209,24 +211,32 @@ const ArtifactTypePage = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Tên chủ đề</th>
-                    <th>Tên loại</th>
+                    <th>Tên tài liệu</th>
+                    <th>Loại mẫu sinh vật</th>
+                    <th>Loại</th>
+                    <th>URL</th>
                     <th>Mô tả</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredArtifactTypes && filteredArtifactTypes.length > 0 ? (
-                    filteredArtifactTypes.map(artifactType => (
-                      <tr key={artifactType.artifactTypeId}>
-                        <td>{highlightText(getTopicName(artifactType.topicId), searchTerm)}</td>
-                        <td>{highlightText(artifactType.name, searchTerm)}</td>
-                        <td>{highlightText(artifactType.description, searchTerm)}</td>
+                  {filteredArtifactMedia && filteredArtifactMedia.length > 0 ? (
+                    filteredArtifactMedia.map(media => (
+                      <tr key={media.artifactMediaId}>
+                        <td>{highlightText(media.artifactName, searchTerm)}</td>
+                        <td>{highlightText(getArtifactName(media.artifactId), searchTerm)}</td>
+                        <td>{highlightText(media.type, searchTerm)}</td>
+                        <td>
+                          <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {highlightText(media.url, searchTerm)}
+                          </div>
+                        </td>
+                        <td>{highlightText(media.description, searchTerm)}</td>
                         <td>
                           <button 
                             className="btn btn-sm btn-edit" 
                             title="Sửa"
-                            onClick={() => handleEditArtifactType(artifactType)}
+                            onClick={() => handleEditArtifactMedia(media)}
                             disabled={updateLoading}
                           >
                             <i className="fas fa-edit"></i>
@@ -234,7 +244,7 @@ const ArtifactTypePage = () => {
                           <button 
                             className="btn btn-sm btn-delete" 
                             title="Xóa"
-                            onClick={() => handleDeleteArtifactType(artifactType)}
+                            onClick={() => handleDeleteArtifactMedia(media)}
                             disabled={deleteLoading}
                           >
                             <i className="fas fa-trash"></i>
@@ -244,8 +254,8 @@ const ArtifactTypePage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="text-center">
-                        {searchTerm ? `Không tìm thấy loại mẫu vật nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu loại mẫu vật'}
+                      <td colSpan="6" className="text-center">
+                        {searchTerm ? `Không tìm thấy media nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu media mẫu vật'}
                       </td>
                     </tr>
                   )}
@@ -257,19 +267,19 @@ const ArtifactTypePage = () => {
       </div>
 
       {/* Modals */}
-      <CreateModalArtifactType 
+      <CreateModalArtifactMedia 
         open={showCreate}
         onClose={handleCloseModals}
-        onSubmit={handleCreateArtifactType}
+        onSubmit={handleCreateArtifactMedia}
         loading={createLoading}
       />
 
-      <EditModalArtifactType 
+      <EditModalArtifactMedia 
         open={showEdit}
         onClose={handleCloseModals}
-        onSubmit={handleUpdateArtifactType}
+        onSubmit={handleUpdateArtifactMedia}
         loading={updateLoading}
-        artifactType={selectedArtifactType}
+        artifactMedia={selectedMedia}
       />
 
       <DeleteModal 
@@ -277,11 +287,11 @@ const ArtifactTypePage = () => {
         onClose={handleCloseModals}
         onConfirm={handleConfirmDelete}
         loading={deleteLoading}
-        itemName={selectedArtifactType?.name}
-        itemType="loại mẫu vật"
+        itemName={selectedMedia?.artifactName}
+        itemType="media mẫu vật"
       />
     </>
   );
 };
 
-export default ArtifactTypePage;
+export default ArtifactMediasPage;
