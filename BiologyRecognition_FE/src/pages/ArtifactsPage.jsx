@@ -1,8 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import '../styles/AdminPage.css';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
+import CreateModalArtifact from '../components/CreateModalArtifact.jsx';
+import EditModalArtifact from '../components/EditModalArtifact.jsx';
+import { fetchArtifactsThunk, createArtifactThunk, updateArtifactThunk } from '../redux/thunks/artifactThunks';
+import { clearArtifactError } from '../redux/actions/artifactActions';
 
 const ArtifactsPage = () => {
+  // Redux
+  const dispatch = useDispatch();
+  const { artifacts = [], loading = false, error = null, creating = false, updating = false } = useSelector((state) => state.artifacts || {});
+
+  // Local state
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [selectedArtifact, setSelectedArtifact] = useState(null);
+
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('navbarCollapsed');
@@ -16,10 +32,78 @@ const ArtifactsPage = () => {
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
   };
 
-  const [artifacts] = useState([
-    { artifact_id: 1, name: 'Lá cây đa', topic: 'Quang hợp', description: 'Mẫu lá cây đa', scientific_name: 'Ficus benghalensis', CreatedDate: '2024-02-01', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-02-02', status: 'active' },
-    { artifact_id: 2, name: 'Tế bào gan', topic: 'Cấu trúc tế bào', description: 'Mẫu tế bào gan', scientific_name: 'Hepatocyte', CreatedDate: '2024-02-03', CreatedBy: 'admin', ModifiedBy: 'admin', ModifiedDate: '2024-02-04', status: 'active' }
-  ]);
+  // Fetch artifacts khi component mount
+  useEffect(() => {
+   
+    dispatch(fetchArtifactsThunk());
+  }, [dispatch]);
+
+  // Debug Redux state
+  useEffect(() => {
+   
+  }, [artifacts, loading, error]);
+
+  // Handle refresh data
+  const handleRefresh = () => {
+    dispatch(fetchArtifactsThunk());
+  };
+
+  // Handle create artifact
+  const handleCreateArtifact = (artifactData) => {
+    dispatch(createArtifactThunk(artifactData))
+      .then(() => {
+        setShowCreate(false);
+        toast.success('Tạo mẫu vật thành công!');
+      })
+      .catch(() => {
+        toast.error('Có lỗi xảy ra khi tạo mẫu vật!');
+      });
+  };
+
+  // Handle edit artifact
+  const handleEditArtifact = (artifact) => {
+  
+    setSelectedArtifact(artifact);
+    setShowEdit(true);
+  };
+
+  // Handle update artifact
+  const handleUpdateArtifact = async (artifactData) => {
+    if (selectedArtifact) {
+      const updateData = {
+        ...artifactData,
+        artifactId: selectedArtifact.artifactId
+      };
+      
+   
+      
+      try {
+        await dispatch(updateArtifactThunk(updateData));
+        // Success - thunk đã refresh data
+        setShowEdit(false);
+        setSelectedArtifact(null);
+        toast.success('Cập nhật mẫu vật thành công!');
+      } catch (error) {
+        console.error('❌ Error updating artifact:', error);
+        toast.error('Có lỗi xảy ra khi cập nhật mẫu vật!');
+      }
+    }
+  };
+
+  // Handle close edit modal
+  const handleCloseEdit = () => {
+    setShowEdit(false);
+    setSelectedArtifact(null);
+  };
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      if (error) {
+        dispatch(clearArtifactError());
+      }
+    };
+  }, [dispatch, error]);
 
   return (
     <>
@@ -30,56 +114,106 @@ const ArtifactsPage = () => {
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
             <div className="page-header">
-              <h1 className="page-title">Artifacts Management</h1>
+              <h1 className="page-title">Quản lý các mẫu vật sinh học</h1>
               <p className="page-description">Quản lý các mẫu vật sinh học</p>
             </div>
+            {error && (
+              <div className="alert alert-danger" style={{ marginBottom: 24 }}>
+                <i className="fas fa-exclamation-triangle"></i> {error}
+                <button 
+                  className="btn btn-sm btn-outline-danger ms-2" 
+                  onClick={() => dispatch(clearArtifactError())}
+                >
+                  Đóng
+                </button>
+              </div>
+            )}
+            
             <div className="action-buttons" style={{ marginBottom: 24 }}>
-              <button className="btn btn-primary"><i className="fas fa-plus"></i> Thêm mới mẫu vật</button>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setShowCreate(true)}
+                disabled={creating}
+              >
+                <i className="fas fa-plus"></i> 
+                {creating ? 'Đang tạo...' : 'Thêm mới mẫu vật'}
+              </button>
+             
             </div>
             <div className="table-responsive">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Tên mẫu vật</th>
-                    <th>Chủ đề</th>
-                    <th>Tên khoa học</th>
-                    <th>Mô tả</th>
-                    <th>Ngày tạo</th>
-                    <th>Người tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th>Ngày sửa cuối</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {artifacts.map(artifact => (
-                    <tr key={artifact.artifact_id}>
-                      <td>{artifact.name}</td>
-                      <td>{artifact.topic}</td>
-                      <td>{artifact.scientific_name}</td>
-                      <td>{artifact.description}</td>
-                      <td>{artifact.CreatedDate}</td>
-                      <td>{artifact.CreatedBy}</td>
-                      <td>{artifact.ModifiedBy}</td>
-                      <td>{artifact.ModifiedDate}</td>
-                      <td>
-                        <span className={`status-badge ${artifact.status === 'active' ? 'status-active' : 'status-inactive'}`}>
-                          {artifact.status === 'active' ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="btn btn-sm btn-edit" title="Sửa"><i className="fas fa-edit"></i></button>
-                        <button className="btn btn-sm btn-delete" title="Xóa"><i className="fas fa-trash"></i></button>
-                      </td>
+              {loading && (!artifacts || artifacts.length === 0) ? (
+                <div className="text-center py-4">
+                  <i className="fas fa-spinner fa-spin fa-2x"></i>
+                  <p className="mt-2">Đang tải dữ liệu...</p>
+                </div>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tên mẫu vật</th>
+                      <th>Mô tả</th>
+                      <th>Tên khoa học</th>
+                      <th>Loại mẫu vật</th>
+                      <th>Thao tác</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {(!artifacts || artifacts.length === 0) && !loading ? (
+                      <tr>
+                        <td colSpan="5" className="text-center py-4">
+                          <i className="fas fa-inbox fa-2x mb-2"></i>
+                          <p>Không có dữ liệu mẫu vật</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      artifacts && artifacts.map(artifact => (
+                        <tr key={artifact.artifactId}>
+                          <td>{artifact.artifactName || 'N/A'}</td>
+                          <td title={artifact.description || ''}>
+                            {artifact.description && artifact.description.length > 100
+                              ? `${artifact.description.substring(0, 100)}...`
+                              : (artifact.description || 'Không có mô tả')}
+                          </td>
+                          <td>{artifact.scientificName || 'N/A'}</td>
+                          <td>{artifact.artifactTypeName || 'N/A'}</td>
+                          <td>
+                            <button 
+                              className="btn btn-sm btn-edit" 
+                              title="Sửa"
+                              onClick={() => handleEditArtifact(artifact)}
+                              disabled={updating}
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button className="btn btn-sm btn-delete" title="Xóa">
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </main>
       </div>
+      
+      <CreateModalArtifact 
+        open={showCreate} 
+        onClose={() => setShowCreate(false)} 
+        onSubmit={handleCreateArtifact}
+        loading={creating}
+      />
+      
+      <EditModalArtifact 
+        open={showEdit} 
+        onClose={handleCloseEdit} 
+        onSubmit={handleUpdateArtifact}
+        initialData={selectedArtifact}
+        loading={updating}
+      />
     </>
   );
 };

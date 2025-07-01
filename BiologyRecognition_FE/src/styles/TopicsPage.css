@@ -122,7 +122,7 @@
 }
 
 .data-table thead tr {
-  background-color: #f8fafc;
+  background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #66BB6A 100%);
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -130,7 +130,7 @@
   padding: 12px 8px;
   text-align: left;
   font-weight: 600;
-  color: #2d3748;
+  color: white;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles/AdminPage.css';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
 

@@ -117,7 +117,7 @@
 }
 
 .data-table thead tr {
-  background-color: #f8fafc;
+  background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #66BB6A 100%);
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -125,7 +125,7 @@
   padding: 12px 8px;
   text-align: left;
   font-weight: 600;
-  color: #2d3748;
+  color: white;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -184,14 +184,16 @@
   padding: 12px 8px;
   vertical-align: top;
   line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal; /* Cho phép text xuống dòng */
+  word-wrap: break-word; /* Ngắt từ dài */
+  overflow: visible; /* Hiển thị toàn bộ text */
 }
 
 .data-table td:nth-child(1) { /* Tên môn học */
   color: #2d3748;
   font-weight: 500;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .data-table td:nth-child(2) { /* Mô tả */

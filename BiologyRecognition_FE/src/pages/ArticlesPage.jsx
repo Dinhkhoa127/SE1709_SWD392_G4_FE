@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
 import Header from '../components/Header.jsx';
+import CreateModalArticle from '../components/CreateModalArticle.jsx';
+import EditModalArticle from '../components/EditModalArticle.jsx';
+import { fetchArticlesThunk, deleteArticleThunk, createArticleThunk, updateArticleThunk } from '../redux/thunks/articleThunks';
+import { clearArticleError } from '../redux/actions/articleActions';
+import { fetchArtifactsThunk } from '../redux/thunks/artifactThunks';
 import '../styles/AdminPage.css';
+import '../styles/ArticlesPage.css';
 
 const ArticlesPage = () => {
+  // Redux
+  const dispatch = useDispatch();
+  const { articles = [], loading = false, error = null, deleting = false, creating = false, updating = false } = useSelector((state) => state.articles || {});
+  const { artifacts = [] } = useSelector((state) => state.artifacts || {});
+
+  // Local state
+  const [showDelete, setShowDelete] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('navbarCollapsed');
@@ -16,10 +35,102 @@ const ArticlesPage = () => {
     setIsCollapsed(newCollapsedState);
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
   };
-  const [articles] = useState([
-    { article_id: 1, title: 'Quang hợp ở thực vật', CreatedBy: 'Nguyễn Văn A', CreatedDate: '2024-02-10', ModifiedBy: 'Nguyễn Văn A', ModifiedDate: '2024-02-11', status: 'published' },
-    { article_id: 2, title: 'Tế bào động vật', CreatedBy: 'Trần Thị B', CreatedDate: '2024-02-12', ModifiedBy: 'Trần Thị B', ModifiedDate: '2024-02-13', status: 'draft' }
-  ]);
+
+  // Fetch articles và artifacts khi component mount
+  useEffect(() => {
+    dispatch(fetchArticlesThunk());
+    // Fetch artifacts để map artifactIds thành tên
+    dispatch(fetchArtifactsThunk());
+  }, [dispatch]);
+
+  // Handle refresh data
+  const handleRefresh = () => {
+    dispatch(fetchArticlesThunk());
+    dispatch(fetchArtifactsThunk());
+  };
+
+  // Helper function để map artifactIds thành tên
+  const getArtifactNames = (artifactIds) => {
+    if (!artifactIds || !Array.isArray(artifactIds) || artifactIds.length === 0) {
+      return 'Không có';
+    }
+    
+    const names = artifactIds.map(id => {
+      const artifact = artifacts.find(art => art.artifactId === id);
+      return artifact ? artifact.artifactName : `ID: ${id}`;
+    });
+    
+    return names.join(', ');
+  };
+
+  // Handle delete article
+  const handleDeleteArticle = (article) => {
+    setSelectedArticle(article);
+    setShowDelete(true);
+  };
+
+  const confirmDeleteArticle = async () => {
+    if (selectedArticle) {
+      try {
+        await dispatch(deleteArticleThunk(selectedArticle.articleId || selectedArticle.article_id));
+        toast.success('Xóa bài viết thành công!');
+        setShowDelete(false);
+        setSelectedArticle(null);
+      } catch (error) {
+        toast.error('Có lỗi xảy ra khi xóa bài viết!');
+      }
+    }
+  };
+
+  // Handle create article
+  const handleCreateArticle = () => {
+    setShowCreate(true);
+  };
+
+  const handleCreateSubmit = async (formData) => {
+    try {
+      const result = await dispatch(createArticleThunk(formData));
+      toast.success('Tạo bài viết thành công!');
+      setShowCreate(false);
+      
+      // Force immediate refresh to ensure UI update
+      dispatch(fetchArticlesThunk());
+      
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi tạo bài viết!');
+    }
+  };
+
+  // Handle edit article
+  const handleEditArticle = (article) => {
+    setSelectedArticle(article);
+    setShowEdit(true);
+  };
+
+  const handleEditSubmit = async (formData) => {
+    try {
+      const articleId = selectedArticle.articleId || selectedArticle.article_id;
+      const result = await dispatch(updateArticleThunk({ articleId, data: formData }));
+      toast.success('Cập nhật bài viết thành công!');
+      setShowEdit(false);
+      setSelectedArticle(null);
+      
+      // Force immediate refresh to ensure UI update
+      dispatch(fetchArticlesThunk());
+      
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi cập nhật bài viết!');
+    }
+  };
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      if (error) {
+        dispatch(clearArticleError());
+      }
+    };
+  }, [dispatch, error]);
 
   return (
     <>
@@ -32,260 +143,177 @@ const ArticlesPage = () => {
         <Header activeSection="articles" isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
-            <div className="page-header" style={{ 
-              marginBottom: '32px',
-              padding: '24px 0',
-              borderBottom: '1px solid #e2e8f0'
-            }}>
-              <h1 className="page-title" style={{ 
-                fontSize: '34px',
-                fontWeight: '800',
-                color: '#0c4a6e',
-                marginBottom: '8px',
-                textShadow: '0 3px 6px rgba(12, 74, 110, 0.3)',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-              }}>Quản lý các bài viết giáo dục</h1>
-              <p className="page-description" style={{ 
-                fontSize: '16px',
-                color: '#4a5568',
-                marginBottom: '0',
-                fontWeight: '500'
-              }}>Quản lý và tổ chức các bài viết giáo dục trong hệ thống</p>
+            <div className="page-header">
+              <h1 className="page-title">Quản lý các bài báo sinh học</h1>
+              <p className="page-description">Quản lý và tổ chức các bài viết sinh học trong hệ thống</p>
             </div>
-            <div className="action-buttons" style={{ marginBottom: '24px' }}>
-              <button 
-                className="btn btn-primary"
-                style={{
-                  backgroundColor: '#3182ce',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 2px 4px rgba(49, 130, 206, 0.3)'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#2c5aa0'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#3182ce'}
-              >
-                <i className="fas fa-plus" style={{ fontSize: '13px' }}></i> 
+            <div className="action-buttons">
+              <button className="btn-primary" onClick={handleCreateArticle}>
+                <i className="fas fa-plus"></i> 
                 Thêm mới bài viết
               </button>
+             
             </div>
-            <div className="table-responsive" style={{ 
-              marginTop: '20px',
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-              overflow: 'auto',
-              overflowX: 'auto',
-              maxWidth: '100%'
-            }}>
-              <table className="data-table" style={{ 
-                width: '100%',
-                minWidth: '1100px',
-                borderCollapse: 'collapse',
-                fontSize: '14px',
-                tableLayout: 'auto'
-              }}>
+
+          
+            
+            {/* Error state */}
+            {error && (
+              <div className="error-container">
+                <i className="fas fa-exclamation-triangle"></i> 
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="table-responsive">
+              <table className="data-table">
                 <thead>
-                  <tr style={{ 
-                    backgroundColor: '#f8fafc',
-                    borderBottom: '2px solid #e2e8f0'
-                  }}>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '250px'
-                    }}>Tiêu đề</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Người tạo</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '130px'
-                    }}>Ngày tạo</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Người sửa cuối</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '130px'
-                    }}>Ngày sửa cuối</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Trạng thái</th>
-                    <th style={{ 
-                      padding: '16px 20px',
-                      textAlign: 'center',
-                      fontWeight: '600',
-                      color: '#2d3748',
-                      fontSize: '13px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      minWidth: '120px'
-                    }}>Thao tác</th>
+                  <tr>
+                    <th>Tiêu đề</th>
+                    <th>Nội dung</th>
+                    <th>Mẫu vật liên quan</th>
+                    <th>Người tạo</th>
+                    <th>Ngày tạo</th>
+                    <th>Người sửa cuối</th>
+                    <th>Ngày sửa cuối</th>
+                    <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {articles.map((article, index) => (
-                    <tr key={article.article_id} style={{ 
-                      borderBottom: '1px solid #e2e8f0',
-                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => e.target.closest('tr').style.backgroundColor = '#f7fafc'}
-                    onMouseLeave={(e) => e.target.closest('tr').style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#fafafa'}
-                    >
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#2d3748',
-                        fontWeight: '500',
-                        lineHeight: '1.5'
-                      }}>{article.title}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        fontSize: '13px'
-                      }}>{article.CreatedBy}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#718096',
-                        fontSize: '13px'
-                      }}>{article.CreatedDate}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#4a5568',
-                        fontSize: '13px'
-                      }}>{article.ModifiedBy}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        color: '#718096',
-                        fontSize: '13px'
-                      }}>{article.ModifiedDate}</td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        textAlign: 'center'
-                      }}>
-                        <span className={`status-badge ${article.status === 'published' ? 'status-active' : 'status-inactive'}`} style={{
-                          padding: '4px 12px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          backgroundColor: article.status === 'published' ? '#dcfce7' : '#fef7cd',
-                          color: article.status === 'published' ? '#166534' : '#92400e'
-                        }}>
-                          {article.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
-                        </span>
-                      </td>
-                      <td style={{ 
-                        padding: '20px',
-                        verticalAlign: 'top',
-                        textAlign: 'center'
-                      }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button 
-                            className="btn btn-sm btn-edit" 
-                            title="Sửa"
-                            style={{
-                              backgroundColor: '#3182ce',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = '#2c5aa0'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = '#3182ce'}
-                          >
-                            <i className="fas fa-edit" style={{ fontSize: '11px' }}></i>
-                            Sửa
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-delete" 
-                            title="Xóa"
-                            style={{
-                              backgroundColor: '#e53e3e',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = '#c53030'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = '#e53e3e'}
-                          >
-                            <i className="fas fa-trash" style={{ fontSize: '11px' }}></i>
-                            Xóa
-                          </button>
+                  {(!articles || articles.length === 0) && !loading ? (
+                    <tr>
+                      <td colSpan="8" className="empty-state">
+                        <div className="empty-state-icon">
+                          <i className="fas fa-inbox"></i>
                         </div>
+                        Không có dữ liệu bài viết
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    articles && Array.isArray(articles) && articles.map(article => {
+                      // Defensive check for article object
+                      if (!article || typeof article !== 'object') {
+                        console.warn('⚠️ Invalid article object:', article);
+                        return null;
+                      }
+                      
+                      return (
+                        <tr key={article.articleId || article.article_id || Math.random()}>
+                          <td>{article.title || 'N/A'}</td>
+                          <td title={article.content || ''}>
+                            {article.content && article.content.length > 100
+                              ? `${article.content.substring(0, 100)}...`
+                              : (article.content || 'N/A')
+                            }
+                          </td>
+                          <td title={getArtifactNames(article.artifactIds)}>
+                            {getArtifactNames(article.artifactIds)}
+                          </td>
+                          <td>{article.createName || article.createdName || article.CreatedBy || 'N/A'}</td>
+                          <td>{article.createdDate ? new Date(article.createdDate).toLocaleDateString('vi-VN') : (article.CreatedDate || 'N/A')}</td>
+                          <td>{article.modifiedName || article.ModifiedBy || 'N/A'}</td>
+                          <td>{article.modifiedDate ? new Date(article.modifiedDate).toLocaleDateString('vi-VN') : (article.ModifiedDate || 'N/A')}</td>
+                          <td>
+                            <div className="action-buttons-container">
+                              <button 
+                                className="btn-edit" 
+                                title="Sửa"
+                                onClick={() => handleEditArticle(article)}
+                                disabled={deleting || updating}
+                              >
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button 
+                                className="btn-delete" 
+                                title="Xóa"
+                                onClick={() => handleDeleteArticle(article)}
+                                disabled={deleting || updating}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }).filter(Boolean)
+                  )}
                 </tbody>
               </table>
             </div>
+
+            {/* Create Modal */}
+            <CreateModalArticle
+              open={showCreate}
+              onClose={() => setShowCreate(false)}
+              onSubmit={handleCreateSubmit}
+              loading={creating}
+            />
+
+            {/* Edit Modal */}
+            <EditModalArticle
+              open={showEdit}
+              onClose={() => {
+                setShowEdit(false);
+                setSelectedArticle(null);
+              }}
+              onSubmit={handleEditSubmit}
+              initialData={selectedArticle}
+              loading={updating}
+            />
+
+            {/* Delete Modal */}
+            {showDelete && (
+              <div className="modal fade show" style={{ display: 'block' }} onClick={() => setShowDelete(false)}>
+                <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">Xác nhận xóa</h5>
+                      <button 
+                        type="button" 
+                        className="btn-close" 
+                        onClick={() => setShowDelete(false)}
+                        disabled={deleting}
+                      ></button>
+                    </div>
+                    <div className="modal-body">
+                      <p>Bạn có chắc chắn muốn xóa bài viết: <strong>{selectedArticle?.title}</strong>?</p>
+                      <p className="text-warning">
+                        <i className="fas fa-exclamation-triangle"></i> 
+                        Hành động này không thể hoàn tác!
+                      </p>
+                    </div>
+                    <div className="modal-footer">
+                      <button 
+                        type="button" 
+                        className="btn btn-secondary" 
+                        onClick={() => setShowDelete(false)}
+                        disabled={deleting}
+                      >
+                        Hủy
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-danger" 
+                        onClick={confirmDeleteArticle}
+                        disabled={deleting}
+                      >
+                        {deleting ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin me-2"></i>
+                            Đang xóa...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-trash me-2"></i>
+                            Xóa
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

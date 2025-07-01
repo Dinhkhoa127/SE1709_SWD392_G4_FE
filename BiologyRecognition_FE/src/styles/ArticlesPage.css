@@ -1,0 +1,68 @@
+/* ArticlesPage.css */
+
+.page-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #0c4a6e;
+  margin-bottom: 8px;
+  text-shadow: 0 3px 6px rgba(12, 74, 110, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Table improvements for Articles page */
+.data-table td {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+/* Specific column widths for Articles table */
+.data-table th:nth-child(1), 
+.data-table td:nth-child(1) { /* Tiêu đề */
+  width: 20%;
+  min-width: 150px;
+}
+
+.data-table th:nth-child(2), 
+.data-table td:nth-child(2) { /* Nội dung */
+  width: 25%;
+  min-width: 200px;
+}
+
+.data-table th:nth-child(3), 
+.data-table td:nth-child(3) { /* Mẫu vật liên quan */
+  width: 15%;
+  min-width: 120px;
+}
+
+.data-table th:nth-child(4), 
+.data-table td:nth-child(4) { /* Người tạo */
+  width: 10%;
+  min-width: 100px;
+}
+
+.data-table th:nth-child(5), 
+.data-table td:nth-child(5) { /* Ngày tạo */
+  width: 10%;
+  min-width: 100px;
+}
+
+.data-table th:nth-child(6), 
+.data-table td:nth-child(6) { /* Người sửa cuối */
+  width: 10%;
+  min-width: 100px;
+}
+
+.data-table th:nth-child(7), 
+.data-table td:nth-child(7) { /* Ngày sửa cuối */
+  width: 10%;
+  min-width: 100px;
+}
+
+.data-table th:nth-child(8), 
+.data-table td:nth-child(8) { /* Thao tác */
+  width: 10%;
+  min-width: 120px;
+  text-align: center;
+}

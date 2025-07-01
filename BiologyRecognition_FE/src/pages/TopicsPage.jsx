@@ -118,8 +118,8 @@ const TopicsPage = () => {
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
             <div className="page-header">
-              <h1 className="page-title">Topics Management</h1>
-              <p className="page-description">Quản lý các chủ đề sinh học</p>
+              <h1 className="page-title">Quản lý các chủ đề sinh học</h1>
+              <p className="page-description">Quản lý các chủ đề sinh học trong hệ thống</p>
             </div>
             
             <div className="action-buttons">
@@ -133,13 +133,7 @@ const TopicsPage = () => {
               </button>
             </div>
             
-            {/* Loading state */}
-            {loading && (
-              <div className="loading-container">
-                <i className="fas fa-spinner fa-spin"></i>
-                <div>Đang tải dữ liệu...</div>
-              </div>
-            )}
+           
             
             {/* Error state */}
             {error && (

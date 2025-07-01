@@ -134,13 +134,7 @@ const SubjectsPage = () => {
               </button>
             </div>
             
-            {/* Loading state */}
-            {loading && (
-              <div className="loading-container">
-                <i className="fas fa-spinner fa-spin"></i>
-                <div>Đang tải dữ liệu...</div>
-              </div>
-            )}
+          
             
             {/* Error state */}
             {error && (
