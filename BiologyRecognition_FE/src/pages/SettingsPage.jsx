@@ -4,7 +4,19 @@ import Header from '../components/Header.jsx';
 import '../styles/AdminPage.css';
 
 const SettingsPage = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Lấy trạng thái collapsed từ localStorage, mặc định là false
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('navbarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Lưu trạng thái collapsed vào localStorage khi thay đổi
+  const handleToggleCollapse = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
+  };
+
   return (
     <>
       <link 
@@ -12,8 +24,8 @@ const SettingsPage = () => {
         rel="stylesheet" 
       />
       <div className={`admin-container${isCollapsed ? ' sidebar-hidden' : ''}`}>
-        <Navbar activeSection="settings" isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
-        <Header activeSection="settings" isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
+        <Navbar activeSection="settings" isCollapsed={isCollapsed} />
+        <Header activeSection="settings" isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
         <main className={`main-content${isCollapsed ? ' collapsed' : ''}`}>
           <div className="content-area">
             <div className="page-header">
