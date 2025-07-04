@@ -10,6 +10,7 @@ import DeleteModal from '../components/DeleteModal.jsx';
 
 import { fetchSubjects, fetchSubjectById, createSubject, updateSubject, deleteSubject } from '../redux/thunks/subjectThunks.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
+import { formatDate } from '../utils/dateUtils';
 
 import '../styles/SubjectsPage.css';
 
@@ -220,10 +221,10 @@ const SubjectsPage = () => {
                       <tr key={subject.subject_id}>
                         <td className="col-name">{highlightText(subject.name, searchTerm)}</td>
                         <td className="col-description">{highlightText(subject.description, searchTerm)}</td>
-                        <td className="col-date">{subject.CreatedDate || subject.createdDate}</td>
+                        <td className="col-date">{formatDate(subject.CreatedDate || subject.createdDate)}</td>
                         <td className="col-user">{subject.CreatedBy || subject.createdName}</td>
                         <td className="col-user">{subject.ModifiedBy || subject.modifiedName}</td>
-                        <td className="col-date">{subject.ModifiedDate || subject.modifiedDate}</td>
+                        <td className="col-date">{formatDate(subject.ModifiedDate || subject.modifiedDate)}</td>
                         <td className="col-actions">
                           <div className="action-buttons-container">
                             <button

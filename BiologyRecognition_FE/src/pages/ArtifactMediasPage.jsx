@@ -30,6 +30,8 @@ const ArtifactMediasPage = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Helper function to get artifact name from artifactId
   const getArtifactName = (artifactId) => {
@@ -48,6 +50,86 @@ const ArtifactMediasPage = () => {
       media.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
+  // Helper function to render media preview based on type
+  const renderMediaPreview = (media) => {
+    if (!media.url) return 'Không có URL';
+    
+    const { type, url } = media;
+    
+    if (type === 'IMAGE') {
+      return (
+        <div className="media-preview">
+          <img 
+            src={url} 
+            alt={media.artifactName}
+            style={{
+              width: '60px',
+              height: '60px',
+              objectFit: 'cover',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+            onClick={() => {
+              setSelectedImage({ url, name: media.artifactName });
+              setShowImageModal(true);
+            }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
+          <div style={{ display: 'none', fontSize: '12px', color: '#666' }}>
+            Lỗi tải ảnh
+          </div>
+        </div>
+      );
+    } else if (type === 'VIDEO') {
+      return (
+        <div className="media-preview">
+          <video 
+            src={url}
+            style={{
+              width: '60px',
+              height: '60px',
+              objectFit: 'cover',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+            onClick={() => window.open(url, '_blank')}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
+          <div style={{ display: 'none', fontSize: '12px', color: '#666' }}>
+            Lỗi tải video
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="media-preview">
+          <a 
+            href={url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              padding: '8px 12px',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              color: '#333',
+              fontSize: '12px'
+            }}
+          >
+            <i className="fas fa-external-link-alt"></i> Xem file
+          </a>
+        </div>
+      );
+    }
+  };
 
   // Helper function to highlight search term in text
   const highlightText = (text, searchTerm) => {
@@ -130,6 +212,8 @@ const ArtifactMediasPage = () => {
     setShowEdit(false);
     setShowDelete(false);
     setSelectedMedia(null);
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   // Loading state
@@ -211,10 +295,10 @@ const ArtifactMediasPage = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Tên tài liệu</th>
+                    <th>Tên mẫu vật</th>
                     <th>Loại mẫu sinh vật</th>
                     <th>Loại</th>
-                    <th>URL</th>
+                    <th>Preview</th>
                     <th>Mô tả</th>
                     <th>Thao tác</th>
                   </tr>
@@ -225,11 +309,13 @@ const ArtifactMediasPage = () => {
                       <tr key={media.artifactMediaId}>
                         <td>{highlightText(media.artifactName, searchTerm)}</td>
                         <td>{highlightText(getArtifactName(media.artifactId), searchTerm)}</td>
-                        <td>{highlightText(media.type, searchTerm)}</td>
                         <td>
-                          <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {highlightText(media.url, searchTerm)}
-                          </div>
+                          <span className={`media-type-badge ${media.type?.toLowerCase()}`}>
+                            {media.type}
+                          </span>
+                        </td>
+                        <td>
+                          {renderMediaPreview(media)}
                         </td>
                         <td>{highlightText(media.description, searchTerm)}</td>
                         <td>
@@ -290,6 +376,29 @@ const ArtifactMediasPage = () => {
         itemName={selectedMedia?.artifactName}
         itemType="media mẫu vật"
       />
+
+      {/* Image Modal */}
+      {showImageModal && selectedImage && (
+        <div className="image-modal-overlay" onClick={handleCloseModals}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={handleCloseModals}>
+              <i className="fas fa-times"></i>
+            </button>
+            <img 
+              src={selectedImage.url} 
+              alt={selectedImage.name}
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                objectFit: 'contain'
+              }}
+            />
+            <div className="image-modal-title">
+              {selectedImage.name}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

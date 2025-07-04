@@ -10,6 +10,7 @@ import CreateModalChapter from '../components/CreateModalChapter';
 import EditModalChapter from '../components/EditModalChapter';
 import DeleteModal from '../components/DeleteModal.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
+import { formatDate } from '../utils/dateUtils';
 
 const ChaptersPage = () => {
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
@@ -248,10 +249,10 @@ const ChaptersPage = () => {
                         <td>{highlightText(chapter.name, searchTerm)}</td>
                         <td>{highlightText(chapter.subjectName || chapter.subject, searchTerm)}</td>
                         <td>{highlightText(chapter.description, searchTerm)}</td>
-                        <td>{chapter.createdDate || chapter.CreatedDate}</td>
+                        <td>{formatDate(chapter.createdDate || chapter.CreatedDate)}</td>
                         <td>{chapter.createdName || chapter.CreatedBy}</td>
                         <td>{chapter.modifiedName || chapter.ModifiedBy}</td>
-                        <td>{chapter.modifiedDate || chapter.ModifiedDate}</td>
+                        <td>{formatDate(chapter.modifiedDate || chapter.ModifiedDate)}</td>
                         <td>
                           <div className="action-buttons-container">
                             <button className="btn btn-edit" title="Sửa" onClick={() => handleEditClick(chapter)}>
