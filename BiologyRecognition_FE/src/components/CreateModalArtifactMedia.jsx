@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import { fetchArtifactTypes } from '../redux/thunks/artifactTypeThunks';
+import { uploadToCloudinary, uploadMediaToCloudinary } from '../services/cloudinaryService';
 import '../styles/CreateModal.css';
 
 const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
@@ -14,8 +15,14 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
         artifactId: '',
         type: 'IMAGE',
         url: '',
-        description: ''
+        description: '',
+        fileName: ''
     });
+
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // Fetch current user and artifact types when modal opens
     useEffect(() => {
@@ -32,6 +39,57 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            setUploading(true);
+            setUploadProgress(0);
+            
+            // Auto-fill file name if empty
+            if (!form.fileName) {
+                const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                setForm({ ...form, fileName: fileNameWithoutExt });
+            }
+            
+            try {
+                // Create preview URL for images
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        setPreviewUrl(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                // Upload to Cloudinary
+                toast.info('Đang tải file lên Cloudinary...');
+                
+                let uploadResult;
+                const customFileName = form.fileName || file.name.replace(/\.[^/.]+$/, "");
+                
+                if (file.type.startsWith('image/')) {
+                    uploadResult = await uploadToCloudinary(file, customFileName);
+                } else {
+                    uploadResult = await uploadMediaToCloudinary(file, customFileName);
+                }
+
+                // Set the Cloudinary URL to form
+                setForm({ ...form, url: uploadResult.url });
+                toast.success('Tải file lên thành công!');
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                toast.error('Lỗi khi tải file lên Cloudinary. Vui lòng thử lại!');
+                setSelectedFile(null);
+                setPreviewUrl('');
+            } finally {
+                setUploading(false);
+                setUploadProgress(0);
+            }
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         
@@ -40,7 +98,7 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
             return;
         }
 
-        if (!form.artifactId || !form.url) {
+        if (!form.artifactId || !form.url || !form.fileName.trim()) {
             toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
             return;
         }
@@ -48,7 +106,7 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
         const artifactMediaData = {
             artifactId: parseInt(form.artifactId),
             type: form.type,
-            url: form.url,
+            url: form.url, // Now contains Cloudinary URL
             description: form.description
         };
 
@@ -58,8 +116,15 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
             artifactId: '',
             type: 'IMAGE',
             url: '',
-            description: ''
+            description: '',
+            fileName: ''
         });
+        setSelectedFile(null);
+        setPreviewUrl('');
+        setUploading(false);
+        setUploadProgress(0);
+        setSelectedFile(null);
+        setPreviewUrl('');
     };
 
     const handleClose = () => {
@@ -67,8 +132,11 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
             artifactId: '',
             type: 'IMAGE',
             url: '',
-            description: ''
+            description: '',
+            fileName: ''
         });
+        setSelectedFile(null);
+        setPreviewUrl('');
         onClose();
     };
 
@@ -119,15 +187,96 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
                         </select>
                     </div>
                     <div className="form-group full-width">
-                        <label>URL *</label>
-                        <textarea
-                            name="url"
-                            value={form.url}
+                        <label>Tên file *</label>
+                        <input
+                            type="text"
+                            name="fileName"
+                            value={form.fileName}
                             onChange={handleChange}
-                            placeholder="Nhập URL media"
-                            rows="2"
+                            placeholder="Nhập tên file (không cần đuôi file)"
                             required
                         />
+                        <small style={{ color: '#666', fontSize: '12px' }}>
+                            Tên này sẽ được sử dụng khi lưu file lên Cloudinary
+                        </small>
+                    </div>
+                    <div className="form-group full-width">
+                        <label>Upload File *</label>
+                        <div className="media-input-container">
+                            {uploading && (
+                                <div className="upload-progress">
+                                    <div className="progress-text">
+                                        <i className="fas fa-spinner fa-spin"></i> Đang tải lên Cloudinary...
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {!selectedFile && !uploading ? (
+                                <div className="upload-area" onClick={() => document.getElementById('fileInput').click()}>
+                                    <div className="upload-placeholder">
+                                        <i className="fas fa-cloud-upload-alt"></i>
+                                        <p>Click để chọn file hoặc kéo thả file vào đây</p>
+                                        <small>Hỗ trợ: Hình ảnh, Video, Audio, Document</small>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="file-selected">
+                                    <div className="file-info">
+                                        <i className="fas fa-file"></i>
+                                        <span>{selectedFile ? selectedFile.name : 'File đã tải lên'}</span>
+                                        {!uploading && (
+                                            <button
+                                                type="button"
+                                                className="remove-file-btn"
+                                                onClick={() => {
+                                                    setSelectedFile(null);
+                                                    setPreviewUrl('');
+                                                    setUploading(false);
+                                                    setUploadProgress(0);
+                                                    setForm({ ...form, url: '', fileName: '' });
+                                                }}
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
+                                    </div>
+                                    {previewUrl && (
+                                        <div className="file-preview">
+                                            <img src={previewUrl} alt="Preview" />
+                                        </div>
+                                    )}
+                                    {form.url && !uploading && (
+                                        <div className="cloudinary-url">
+                                            <label>Cloudinary URL:</label>
+                                            <input 
+                                                type="text" 
+                                                value={form.url} 
+                                                readOnly 
+                                                className="url-display"
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '8px',
+                                                    border: '1px solid #ddd',
+                                                    borderRadius: '4px',
+                                                    backgroundColor: '#f8f9fa',
+                                                    fontSize: '12px',
+                                                    marginTop: '8px'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            <input
+                                id="fileInput"
+                                type="file"
+                                accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                                onChange={handleFileChange}
+                                style={{ display: 'none' }}
+                                disabled={uploading}
+                            />
+                        </div>
                     </div>
                     <div className="form-group full-width">
                         <label>Mô tả</label>
@@ -151,7 +300,7 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
                         <button 
                             type="submit" 
                             className="btn btn-primary"
-                            disabled={loading || !form.artifactId || !form.url.trim()}
+                            disabled={loading || uploading || !form.artifactId || !form.url || !form.fileName.trim()}
                         >
                             {loading ? (
                                 <>

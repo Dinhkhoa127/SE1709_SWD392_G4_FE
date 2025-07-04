@@ -210,7 +210,7 @@ const ArtifactTypePage = () => {
                 <thead>
                   <tr>
                     <th>Tên chủ đề</th>
-                    <th>Tên loại</th>
+                    <th>Tên loại mẫu vật</th>
                     <th>Mô tả</th>
                     <th>Thao tác</th>
                   </tr>

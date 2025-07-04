@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchUsersThunk, deleteUserThunk } from '../redux/thunks/userThunks';
 import { clearUserError } from '../redux/actions/userActions';
+import { formatDate } from '../utils/dateUtils';
 import '../styles/UsersPage.css';
 
 const UsersPage = () => {
@@ -57,11 +58,6 @@ const UsersPage = () => {
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   // Helper functions
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
-  };
-
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
