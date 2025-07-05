@@ -8,6 +8,7 @@ import EditModalArticle from '../components/EditModalArticle.jsx';
 import { fetchArticlesThunk, deleteArticleThunk, createArticleThunk, updateArticleThunk } from '../redux/thunks/articleThunks';
 import { clearArticleError } from '../redux/actions/articleActions';
 import { fetchArtifactsThunk } from '../redux/thunks/artifactThunks';
+import { formatDate } from '../utils/dateUtils';
 import '../styles/AdminPage.css';
 import '../styles/ArticlesPage.css';
 
@@ -292,9 +293,9 @@ const ArticlesPage = () => {
                             {getArtifactNames(article.artifactIds)}
                           </td>
                           <td>{article.createName || article.createdName || article.CreatedBy || 'N/A'}</td>
-                          <td>{article.createdDate ? new Date(article.createdDate).toLocaleDateString('vi-VN') : (article.CreatedDate || 'N/A')}</td>
+                          <td>{formatDate(article.createdDate || article.CreatedDate)}</td>
                           <td>{article.modifiedName || article.ModifiedBy || 'N/A'}</td>
-                          <td>{article.modifiedDate ? new Date(article.modifiedDate).toLocaleDateString('vi-VN') : (article.ModifiedDate || 'N/A')}</td>
+                          <td>{formatDate(article.modifiedDate || article.ModifiedDate)}</td>
                           <td>
                             <div className="action-buttons-container">
                               <button 

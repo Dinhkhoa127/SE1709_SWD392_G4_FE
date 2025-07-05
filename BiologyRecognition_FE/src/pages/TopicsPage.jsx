@@ -10,6 +10,7 @@ import DeleteModal from '../components/DeleteModal.jsx';
 
 import { fetchTopics, fetchTopicById, createTopic, updateTopic, deleteTopic } from '../redux/thunks/topicThunks.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
+import { formatDate } from '../utils/dateUtils';
 
 import '../styles/TopicsPage.css';
 
@@ -222,10 +223,10 @@ const TopicsPage = () => {
                         <td>{highlightText(topic.name, searchTerm)}</td>
                         <td>{highlightText(topic.chapterName || topic.chapter, searchTerm)}</td>
                         <td>{highlightText(topic.description, searchTerm)}</td>
-                        <td>{topic.createdDate || topic.CreatedDate}</td>
+                        <td>{formatDate(topic.createdDate || topic.CreatedDate)}</td>
                         <td>{topic.createdName || topic.CreatedBy}</td>
                         <td>{topic.modifiedName || topic.ModifiedBy}</td>
-                        <td>{topic.modifiedDate || topic.ModifiedDate}</td>
+                        <td>{formatDate(topic.modifiedDate || topic.ModifiedDate)}</td>
                         <td>
                           <div className="action-buttons-container">
                             <button
