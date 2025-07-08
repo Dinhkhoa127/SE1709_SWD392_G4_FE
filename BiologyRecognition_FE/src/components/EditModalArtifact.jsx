@@ -6,7 +6,9 @@ import {
     getSubjectsAPI, 
     getChaptersBySubjectAPI, 
     getTopicsByChapterAPI, 
-    getArtifactTypesByTopicAPI 
+    getArtifactTypesByTopicAPI,
+    getTopicByIdAPI,
+    getChapterByIdAPI
 } from '../redux/services/apiService';
 import '../styles/EditModal.css';
 
@@ -41,6 +43,12 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     artifactTypes: false
   });
 
+  // Store resolved IDs from cascade lookup
+  const [resolvedIds, setResolvedIds] = useState({
+    subjectId: null,
+    chapterId: null
+  });
+
   // Load initial data when modal opens or initialData changes
   useEffect(() => {
     if (open && initialData) {
@@ -53,6 +61,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
         topicId: initialData.topicId || '',
         artifactTypeId: initialData.artifactTypeId || ''
       });
+      
       setIsEditing(false); // Reset to view mode when opening
     } else {
       setForm(defaultForm);
@@ -66,28 +75,67 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
       if (!currentUser) {
         dispatch(fetchCurrentUser());
       }
+      
+      // Load basic subjects data
       fetchSubjects();
     }
   }, [open, currentUser, dispatch]);
 
-  // Auto-fetch cascading dropdowns when form has pre-selected values
+  // Load cascade data when initialData is available
   useEffect(() => {
-    if (open && initialData && form.subjectId) {
-      fetchChaptersBySubject(form.subjectId);
+    if (open && initialData) {
+      loadCascadeData();
     }
-  }, [open, initialData, form.subjectId]);
+  }, [open, initialData]);
 
-  useEffect(() => {
-    if (open && initialData && form.chapterId && form.subjectId) {
-      fetchTopicsByChapter(form.chapterId);
+  // Load cascade dropdown data based on initialData
+  const loadCascadeData = async () => {
+    try {
+      let effectiveSubjectId = initialData.subjectId;
+      let effectiveChapterId = initialData.chapterId;
+      
+      // If we don't have subjectId/chapterId but have topicId, try to get them
+      if (!effectiveSubjectId || !effectiveChapterId) {
+        if (initialData.topicId) {
+          const topicInfo = await getTopicInfoById(initialData.topicId);
+          if (topicInfo) {
+            effectiveSubjectId = effectiveSubjectId || topicInfo.subjectId;
+            effectiveChapterId = effectiveChapterId || topicInfo.chapterId;
+            
+            // Save resolved IDs for display
+            setResolvedIds({
+              subjectId: effectiveSubjectId,
+              chapterId: effectiveChapterId
+            });
+          }
+        }
+      }
+      
+      // Load cascade data based on effective IDs
+      if (effectiveSubjectId) {
+        await fetchChaptersBySubject(effectiveSubjectId);
+        
+        if (effectiveChapterId) {
+          await fetchTopicsByChapter(effectiveChapterId);
+          
+          if (initialData.topicId) {
+            await fetchArtifactTypesByTopic(initialData.topicId);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cascade data:', error);
     }
-  }, [open, initialData, form.chapterId]);
+  };
 
-  useEffect(() => {
-    if (open && initialData && form.topicId && form.chapterId) {
-      fetchArtifactTypesByTopic(form.topicId);
+  // Load basic subjects data
+  const loadInitialData = async () => {
+    try {
+      await fetchSubjects();
+    } catch (error) {
+      console.error('Error loading initial data:', error);
     }
-  }, [open, initialData, form.topicId]);
+  };
 
   const fetchSubjects = async () => {
     try {
@@ -153,6 +201,65 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     }
   };
 
+  // Get topic info including chapterId and subjectId
+  const getTopicInfoById = async (topicId) => {
+    try {
+      const response = await getTopicByIdAPI(topicId);
+      const topicData = response.data || response;
+      
+      if (topicData && topicData.chapterId) {
+        // If we have chapterId, try to get subjectId from chapter info
+        if (topicData.chapterId) {
+          try {
+            const chapterResponse = await getChapterByIdAPI(topicData.chapterId);
+            const chapterData = chapterResponse.data || chapterResponse;
+            
+            if (chapterData && chapterData.subjectId) {
+              return {
+                chapterId: topicData.chapterId,
+                subjectId: chapterData.subjectId
+              };
+            }
+          } catch (error) {
+            console.log('⚠️ Error getting chapter info:', error);
+          }
+        }
+        
+        return {
+          chapterId: topicData.chapterId,
+          subjectId: null
+        };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Error getting topic info:', error);
+      return null;
+    }
+  };
+
+  // Load cascade data for edit mode
+  const loadCascadeDataForEdit = async (subjectId, chapterId, topicId) => {
+    try {
+      // Load chapters if we have subjectId
+      if (subjectId) {
+        await fetchChaptersBySubject(subjectId);
+        
+        // Load topics if we have chapterId
+        if (chapterId) {
+          await fetchTopicsByChapter(chapterId);
+          
+          // Load artifact types if we have topicId
+          if (topicId) {
+            await fetchArtifactTypesByTopic(topicId);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cascade data for edit mode:', error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -162,6 +269,20 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
       if (name === 'subjectId' && value) {
         fetchChaptersBySubject(value);
         // Reset dependent fields
+        setForm(prev => ({
+          ...prev,
+          chapterId: '',
+          topicId: '',
+          artifactTypeId: ''
+        }));
+        setDropdownData(prev => ({
+          ...prev,
+          chapters: [],
+          topics: [],
+          artifactTypes: []
+        }));
+      } else if (name === 'subjectId' && !value) {
+        // If subject is cleared, reset everything
         setForm(prev => ({
           ...prev,
           chapterId: '',
@@ -187,9 +308,31 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
           topics: [],
           artifactTypes: []
         }));
+      } else if (name === 'chapterId' && !value) {
+        // If chapter is cleared, reset topics and artifact types
+        setForm(prev => ({
+          ...prev,
+          topicId: '',
+          artifactTypeId: ''
+        }));
+        setDropdownData(prev => ({
+          ...prev,
+          topics: [],
+          artifactTypes: []
+        }));
       } else if (name === 'topicId' && value) {
         fetchArtifactTypesByTopic(value);
         // Reset dependent field
+        setForm(prev => ({
+          ...prev,
+          artifactTypeId: ''
+        }));
+        setDropdownData(prev => ({
+          ...prev,
+          artifactTypes: []
+        }));
+      } else if (name === 'topicId' && !value) {
+        // If topic is cleared, reset artifact types
         setForm(prev => ({
           ...prev,
           artifactTypeId: ''
@@ -203,7 +346,21 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   };
 
   const handleEdit = () => {
+    // Update form with resolved IDs when entering edit mode
+    const effectiveSubjectId = form.subjectId || initialData?.subjectId || resolvedIds.subjectId;
+    const effectiveChapterId = form.chapterId || initialData?.chapterId || resolvedIds.chapterId;
+    
+    // Update form with effective IDs for proper cascade behavior
+    setForm(prev => ({
+      ...prev,
+      subjectId: effectiveSubjectId || '',
+      chapterId: effectiveChapterId || ''
+    }));
+    
     setIsEditing(true);
+    
+    // Load cascade data for edit mode
+    loadCascadeDataForEdit(effectiveSubjectId, effectiveChapterId, form.topicId);
   };
 
   const handleSubmit = () => {
@@ -228,40 +385,90 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
       topics: [],
       artifactTypes: []
     });
+    setResolvedIds({
+      subjectId: null,
+      chapterId: null
+    });
     onClose();
   };
 
   // Get display names for view mode
   const getSubjectName = () => {
-    if (!form.subjectId || !dropdownData.subjects.length) return 'Không có thông tin';
+    // First try to get from initialData
+    if (initialData && initialData.subjectName) {
+      return initialData.subjectName;
+    }
+    
+    // Try to get subjectId from form, initialData, or resolved IDs
+    const subjectId = form.subjectId || initialData?.subjectId || resolvedIds.subjectId;
+    
+    if (!subjectId) {
+      return 'Không có thông tin';
+    }
+    
+    // Fallback to dropdown data
     const subject = dropdownData.subjects.find(s => 
-      (s.subjectId || s.subject_id) == form.subjectId
+      (s.subjectId || s.subject_id) == subjectId
     );
-    return subject ? subject.name : 'Không tìm thấy môn học';
+    return subject ? subject.name : 'Không có thông tin';
   };
 
   const getChapterName = () => {
-    if (!form.chapterId || !dropdownData.chapters.length) return 'Không có thông tin';
+    // First try to get from initialData
+    if (initialData && initialData.chapterName) {
+      return initialData.chapterName;
+    }
+    
+    // Try to get chapterId from form, initialData, or resolved IDs
+    const chapterId = form.chapterId || initialData?.chapterId || resolvedIds.chapterId;
+    
+    if (!chapterId) {
+      return 'Không có thông tin';
+    }
+    
+    // Fallback to dropdown data
     const chapter = dropdownData.chapters.find(ch => 
-      (ch.chapterId || ch.chapter_id) == form.chapterId
+      (ch.chapterId || ch.chapter_id) == chapterId
     );
-    return chapter ? chapter.name : 'Không tìm thấy chương';
+    return chapter ? chapter.name : 'Không có thông tin';
   };
 
   const getTopicName = () => {
-    if (!form.topicId || !dropdownData.topics.length) return 'Không có thông tin';
+    // First try to get from initialData
+    if (initialData && initialData.topicName) {
+      return initialData.topicName;
+    }
+    
+    // Try to get topicId from form or initialData
+    const topicId = form.topicId || initialData?.topicId;
+    if (!topicId) {
+      return 'Không có thông tin';
+    }
+    
+    // Fallback to dropdown data
     const topic = dropdownData.topics.find(t => 
-      (t.topicId || t.topic_id) == form.topicId
+      (t.topicId || t.topic_id) == topicId
     );
-    return topic ? topic.name : 'Không tìm thấy chủ đề';
+    return topic ? topic.name : 'Không có thông tin';
   };
 
   const getArtifactTypeName = () => {
-    if (!form.artifactTypeId || !dropdownData.artifactTypes.length) return 'Không có thông tin';
+    // First try to get from initialData
+    if (initialData && initialData.artifactTypeName) {
+      return initialData.artifactTypeName;
+    }
+    
+    // Try to get artifactTypeId from form or initialData
+    const artifactTypeId = form.artifactTypeId || initialData?.artifactTypeId;
+    if (!artifactTypeId) {
+      return 'Không có thông tin';
+    }
+    
+    // Fallback to dropdown data
     const artifactType = dropdownData.artifactTypes.find(at => 
-      (at.artifactTypeId || at.artifact_type_id) == form.artifactTypeId
+      (at.artifactTypeId || at.artifact_type_id) == artifactTypeId
     );
-    return artifactType ? artifactType.name : 'Không tìm thấy loại mẫu vật';
+    return artifactType ? artifactType.name : 'Không có thông tin';
   };
 
   if (!open) return null;

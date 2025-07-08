@@ -201,15 +201,13 @@ const SubjectsPage = () => {
                     <th className="col-description">Mô tả</th>
                     <th className="col-date">Ngày tạo</th>
                     <th>Người tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th className="col-date">Ngày sửa cuối</th>
                     <th className="col-actions">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {!loading && filteredSubjects.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="empty-state">
+                      <td colSpan="5" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
@@ -223,8 +221,6 @@ const SubjectsPage = () => {
                         <td className="col-description">{highlightText(subject.description, searchTerm)}</td>
                         <td className="col-date">{formatDate(subject.CreatedDate || subject.createdDate)}</td>
                         <td className="col-user">{subject.CreatedBy || subject.createdName}</td>
-                        <td className="col-user">{subject.ModifiedBy || subject.modifiedName}</td>
-                        <td className="col-date">{formatDate(subject.ModifiedDate || subject.modifiedDate)}</td>
                         <td className="col-actions">
                           <div className="action-buttons-container">
                             <button

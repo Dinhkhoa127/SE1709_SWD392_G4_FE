@@ -138,28 +138,24 @@
   width: 20%;
 }
 
-.data-table th:nth-child(2) { /* Mô tả */
+.data-table th:nth-child(1) { /* Tên môn học */
   width: 25%;
 }
 
+.data-table th:nth-child(2) { /* Mô tả */
+  width: 35%;
+}
+
 .data-table th:nth-child(3) { /* Ngày tạo */
-  width: 13%;
+  width: 15%;
 }
 
 .data-table th:nth-child(4) { /* Người tạo */
-  width: 13%;
+  width: 15%;
 }
 
-.data-table th:nth-child(5) { /* Người sửa cuối */
-  width: 13%;
-}
-
-.data-table th:nth-child(6) { /* Ngày sửa cuối */
-  width: 13%;
-}
-
-.data-table th:nth-child(7) { /* Thao tác */
-  width: 13%;
+.data-table th:nth-child(5) { /* Thao tác */
+  width: 10%;
   text-align: center;
 }
 
@@ -203,19 +199,19 @@
   line-height: 1.3;
 }
 
-.data-table td:nth-child(3),
-.data-table td:nth-child(6) { /* Ngày tạo, Ngày sửa cuối */
+.data-table td:nth-child(3) { /* Ngày tạo */
   color: #718096;
   font-size: 12px;
+  text-align: center; /* Căn giữa cho cột ngày */
 }
 
-.data-table td:nth-child(4),
-.data-table td:nth-child(5) { /* Người tạo, Người sửa cuối */
+.data-table td:nth-child(4) { /* Người tạo */
   color: #4a5568;
   font-size: 12px;
+  text-align: center; /* Căn giữa cho cột người */
 }
 
-.data-table td:nth-child(7) { /* Thao tác */
+.data-table td:nth-child(5) { /* Thao tác */
   text-align: center;
   white-space: nowrap;
 }

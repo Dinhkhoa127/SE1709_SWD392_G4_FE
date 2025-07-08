@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
+import { formatDate } from '../utils/dateUtils';
 import '../styles/EditModal.css';
 
 const defaultForm = {
@@ -98,6 +99,24 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
               rows="4"
               disabled={!isEditing}
               required
+            />
+          </div>
+          <div className="form-group">
+            <label>Người sửa cuối</label>
+            <input
+              type="text"
+              value={initialData?.ModifiedBy || initialData?.modifiedName || 'Chưa có'}
+              disabled
+              className="disabled-input"
+            />
+          </div>
+          <div className="form-group">
+            <label>Ngày sửa cuối</label>
+            <input
+              type="text"
+              value={formatDate(initialData?.ModifiedDate || initialData?.modifiedDate)}
+              disabled
+              className="disabled-input"
             />
           </div>
         </form>

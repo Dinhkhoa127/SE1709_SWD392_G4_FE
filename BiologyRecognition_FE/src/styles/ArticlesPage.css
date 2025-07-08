@@ -20,50 +20,38 @@
 /* Specific column widths for Articles table */
 .data-table th:nth-child(1), 
 .data-table td:nth-child(1) { /* Tiêu đề */
-  width: 20%;
-  min-width: 150px;
+  width: 25%;
+  min-width: 180px;
 }
 
 .data-table th:nth-child(2), 
 .data-table td:nth-child(2) { /* Nội dung */
-  width: 25%;
-  min-width: 200px;
+  width: 30%;
+  min-width: 220px;
 }
 
 .data-table th:nth-child(3), 
 .data-table td:nth-child(3) { /* Mẫu vật liên quan */
-  width: 15%;
-  min-width: 120px;
+  width: 26%;
+  min-width: 150px;
 }
 
 .data-table th:nth-child(4), 
 .data-table td:nth-child(4) { /* Người tạo */
-  width: 10%;
-  min-width: 100px;
+  width: 16%;
+  min-width: 110px;
 }
 
 .data-table th:nth-child(5), 
 .data-table td:nth-child(5) { /* Ngày tạo */
-  width: 10%;
-  min-width: 100px;
+  width: 14%;
+  min-width: 110px;
 }
 
 .data-table th:nth-child(6), 
-.data-table td:nth-child(6) { /* Người sửa cuối */
-  width: 10%;
-  min-width: 100px;
-}
-
-.data-table th:nth-child(7), 
-.data-table td:nth-child(7) { /* Ngày sửa cuối */
-  width: 10%;
-  min-width: 100px;
-}
-
-.data-table th:nth-child(8), 
-.data-table td:nth-child(8) { /* Thao tác */
-  width: 10%;
-  min-width: 120px;
+.data-table td:nth-child(6) { /* Thao tác */
+  width: 15%;
+  min-width: 130px;
   text-align: center;
 }
 

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import { fetchSubjects } from '../redux/thunks/subjectThunks';
+import { formatDate } from '../utils/dateUtils';
 import '../styles/EditModal.css';
 
 const defaultForm = {
@@ -129,6 +130,34 @@ const EditModalChapter = ({ open, onClose, onSubmit, initialData, loading }) => 
               rows="4"
               disabled={!isEditing}
               required
+            />
+          </div>
+          
+          {/* Read-only fields */}
+          <div className="form-group">
+            <label>Người sửa cuối</label>
+            <input
+              type="text"
+              value={initialData?.modifiedName || initialData?.ModifiedBy || ''}
+              disabled
+              style={{
+                backgroundColor: '#f5f5f5',
+                color: '#666',
+                border: '1px solid #ddd'
+              }}
+            />
+          </div>
+          <div className="form-group">
+            <label>Ngày sửa cuối</label>
+            <input
+              type="text"
+              value={initialData?.modifiedDate || initialData?.ModifiedDate ? formatDate(initialData?.modifiedDate || initialData?.ModifiedDate) : ''}
+              disabled
+              style={{
+                backgroundColor: '#f5f5f5',
+                color: '#666',
+                border: '1px solid #ddd'
+              }}
             />
           </div>
         </form>

@@ -298,7 +298,6 @@ const ArtifactMediasPage = () => {
                     <th>Tên mẫu vật</th>
                     <th>Loại mẫu sinh vật</th>
                     <th>Loại</th>
-                    <th>Preview</th>
                     <th>Mô tả</th>
                     <th>Thao tác</th>
                   </tr>
@@ -314,9 +313,7 @@ const ArtifactMediasPage = () => {
                             {media.type}
                           </span>
                         </td>
-                        <td>
-                          {renderMediaPreview(media)}
-                        </td>
+                       
                         <td>{highlightText(media.description, searchTerm)}</td>
                         <td>
                           <button 

@@ -258,15 +258,13 @@ const ArticlesPage = () => {
                     <th>Mẫu vật liên quan</th>
                     <th>Người tạo</th>
                     <th>Ngày tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th>Ngày sửa cuối</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(filteredArticles.length === 0 && !loading) ? (
                     <tr>
-                      <td colSpan="8" className="empty-state">
+                      <td colSpan="6" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
@@ -294,8 +292,6 @@ const ArticlesPage = () => {
                           </td>
                           <td>{article.createName || article.createdName || article.CreatedBy || 'N/A'}</td>
                           <td>{formatDate(article.createdDate || article.CreatedDate)}</td>
-                          <td>{article.modifiedName || article.ModifiedBy || 'N/A'}</td>
-                          <td>{formatDate(article.modifiedDate || article.ModifiedDate)}</td>
                           <td>
                             <div className="action-buttons-container">
                               <button 

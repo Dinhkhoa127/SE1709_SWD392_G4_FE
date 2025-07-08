@@ -228,15 +228,13 @@ const ChaptersPage = () => {
                     <th>Mô tả</th>
                     <th>Ngày tạo</th>
                     <th>Người tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th>Ngày sửa cuối</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {!loading && filteredChapters.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="empty-state">
+                      <td colSpan="6" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
@@ -251,8 +249,6 @@ const ChaptersPage = () => {
                         <td>{highlightText(chapter.description, searchTerm)}</td>
                         <td>{formatDate(chapter.createdDate || chapter.CreatedDate)}</td>
                         <td>{chapter.createdName || chapter.CreatedBy}</td>
-                        <td>{chapter.modifiedName || chapter.ModifiedBy}</td>
-                        <td>{formatDate(chapter.modifiedDate || chapter.ModifiedDate)}</td>
                         <td>
                           <div className="action-buttons-container">
                             <button className="btn btn-edit" title="Sửa" onClick={() => handleEditClick(chapter)}>

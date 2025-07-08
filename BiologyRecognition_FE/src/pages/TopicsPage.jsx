@@ -202,15 +202,13 @@ const TopicsPage = () => {
                     <th>Mô tả</th>
                     <th>Ngày tạo</th>
                     <th>Người tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th>Ngày sửa cuối</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {!loading && filteredTopics.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="empty-state">
+                      <td colSpan="6" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
@@ -225,8 +223,6 @@ const TopicsPage = () => {
                         <td>{highlightText(topic.description, searchTerm)}</td>
                         <td>{formatDate(topic.createdDate || topic.CreatedDate)}</td>
                         <td>{topic.createdName || topic.CreatedBy}</td>
-                        <td>{topic.modifiedName || topic.ModifiedBy}</td>
-                        <td>{formatDate(topic.modifiedDate || topic.ModifiedDate)}</td>
                         <td>
                           <div className="action-buttons-container">
                             <button

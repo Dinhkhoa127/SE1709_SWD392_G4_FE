@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
-import { getChaptersAPI } from '../redux/services/apiService';
+import { getChaptersAPI, getSubjectsAPI, getChaptersBySubjectAPI } from '../redux/services/apiService';
 import '../styles/CreateModal.css';
 
 const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
@@ -11,39 +11,83 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
     
     const [form, setForm] = useState({
         name: '',
+        subjectId: '',
         chapterId: '',
         description: ''
     });
 
+    const [subjects, setSubjects] = useState([]);
     const [chapters, setChapters] = useState([]);
-    const [chaptersLoading, setChaptersLoading] = useState(false);
+    const [loadingStates, setLoadingStates] = useState({
+        subjects: false,
+        chapters: false
+    });
 
-    // Fetch current user and chapters when modal opens
+    // Fetch current user and subjects when modal opens
     useEffect(() => {
         if (open) {
             if (!currentUser) {
                 dispatch(fetchCurrentUser());
             }
-            fetchChapters();
+            fetchSubjects();
         }
     }, [open, currentUser, dispatch]);
 
-    const fetchChapters = async () => {
+    const fetchSubjects = async () => {
         try {
-            setChaptersLoading(true);
-            const response = await getChaptersAPI();
+            setLoadingStates(prev => ({ ...prev, subjects: true }));
+            const response = await getSubjectsAPI();
+            setSubjects(response.data || response || []);
+        } catch (error) {
+            toast.error('Không thể tải danh sách môn học!');
+            setSubjects([]);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, subjects: false }));
+        }
+    };
+
+    const fetchChaptersBySubject = async (subjectId) => {
+        try {
+            setLoadingStates(prev => ({ ...prev, chapters: true }));
+            const response = await getChaptersBySubjectAPI(subjectId);
             setChapters(response.data || response || []);
         } catch (error) {
-
             toast.error('Không thể tải danh sách chương!');
             setChapters([]);
         } finally {
-            setChaptersLoading(false);
+            setLoadingStates(prev => ({ ...prev, chapters: false }));
+        }
+    };
+
+    const fetchChapters = async () => {
+        try {
+            setLoadingStates(prev => ({ ...prev, chapters: true }));
+            const response = await getChaptersAPI();
+            setChapters(response.data || response || []);
+        } catch (error) {
+            toast.error('Không thể tải danh sách chương!');
+            setChapters([]);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, chapters: false }));
         }
     };
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
+
+        // Handle cascade dropdown for chapters when subject changes
+        if (name === 'subjectId') {
+            if (value) {
+                // Load chapters for selected subject
+                fetchChaptersBySubject(value);
+            } else {
+                // Clear chapters if no subject selected
+                setChapters([]);
+            }
+            // Reset chapter selection when subject changes
+            setForm(prev => ({ ...prev, chapterId: '' }));
+        }
     };
 
     const handleSubmit = (e) => {
@@ -58,6 +102,11 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
         
         if (!userId) {
             toast.error('Không thể lấy ID người dùng hiện tại!');
+            return;
+        }
+
+        if (!form.subjectId) {
+            toast.error('Vui lòng chọn môn học!');
             return;
         }
 
@@ -77,6 +126,7 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
         
         setForm({
             name: '',
+            subjectId: '',
             chapterId: '',
             description: ''
         });
@@ -85,9 +135,12 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
     const handleClose = () => {
         setForm({
             name: '',
+            subjectId: '',
             chapterId: '',
             description: ''
         });
+        setSubjects([]);
+        setChapters([]);
         onClose();
     };
 
@@ -113,16 +166,44 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
                         />
                     </div>
                     <div className="form-group full-width">
+                        <label>Môn học *</label>
+                        <select 
+                            name="subjectId" 
+                            value={form.subjectId} 
+                            onChange={handleChange}
+                            required
+                            disabled={loadingStates.subjects}
+                        >
+                            <option value="">
+                                {loadingStates.subjects ? 'Đang tải môn học...' : 'Chọn môn học'}
+                            </option>
+                            {subjects.map(subject => (
+                                <option 
+                                    key={subject.subjectId || subject.subject_id} 
+                                    value={subject.subjectId || subject.subject_id}
+                                >
+                                    {subject.name}
+                                </option>
+                            ))}
+                        </select>
+                        {loadingStates.subjects && (
+                            <div className="loading-indicator">
+                                <i className="fas fa-spinner fa-spin"></i> Đang tải danh sách môn học...
+                            </div>
+                        )}
+                    </div>
+                    <div className="form-group full-width">
                         <label>Chương *</label>
                         <select 
                             name="chapterId" 
                             value={form.chapterId} 
                             onChange={handleChange}
                             required
-                            disabled={chaptersLoading}
+                            disabled={loadingStates.chapters || !form.subjectId}
                         >
                             <option value="">
-                                {chaptersLoading ? 'Đang tải chương...' : 'Chọn chương'}
+                                {loadingStates.chapters ? 'Đang tải chương...' : 
+                                 !form.subjectId ? 'Vui lòng chọn môn học trước' : 'Chọn chương'}
                             </option>
                             {chapters.map(chapter => (
                                 <option 
@@ -133,7 +214,7 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
                                 </option>
                             ))}
                         </select>
-                        {chaptersLoading && (
+                        {loadingStates.chapters && (
                             <div className="loading-indicator">
                                 <i className="fas fa-spinner fa-spin"></i> Đang tải danh sách chương...
                             </div>
@@ -162,7 +243,7 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
                         <button 
                             type="submit" 
                             className="btn btn-primary"
-                            disabled={loading || !form.name.trim() || !form.chapterId || !form.description.trim() || chaptersLoading}
+                            disabled={loading || !form.name.trim() || !form.subjectId || !form.chapterId || !form.description.trim() || Object.values(loadingStates).some(loading => loading)}
                         >
                             {loading ? (
                                 <>
