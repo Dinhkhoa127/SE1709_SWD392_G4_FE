@@ -14,6 +14,7 @@ import ArticlesPage from "./pages/ArticlesPage";
 import UsersPage from "./pages/UsersPage.jsx";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/Login.jsx";
+import GoogleCallback from "./pages/GoogleCallback.jsx";
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
       <BrowserRouter basename={import.meta.env.VITE_BASE_PATH}>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="/" element={<Login />} />
           <Route path="/admin" element={
             <ProtectedRoute>
