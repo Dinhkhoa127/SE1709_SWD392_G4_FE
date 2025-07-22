@@ -1,7 +1,7 @@
 import instance from "../util/axiosCustomize";
 
 const loginAPI = async (usernameOrEmail, password) => {
-    const URL_API = "/authentication/login";
+    const URL_API = "/auth/login";
     let data = {
         usernameOrEmail: usernameOrEmail,
         password: password,
@@ -11,15 +11,15 @@ const loginAPI = async (usernameOrEmail, password) => {
 
 const loginGoogleAPI = async (redirectUrl = null) => {
     // Tạo redirect URL mặc định nếu không được cung cấp
-    const defaultRedirect = window.location.origin + '/auth/google/callback';
+    const defaultRedirect = window.location.origin + '/auth/google-callback';
     const redirect = redirectUrl || defaultRedirect;
     
     // Redirect đến Google OAuth với callback URL
-    window.location.href = `${import.meta.env.VITE_BE_API_URL}/authentication/login-google?redirect=${encodeURIComponent(redirect)}`;
+    window.location.href = `${import.meta.env.VITE_BE_API_URL}/auth/login-google?redirect=${encodeURIComponent(redirect)}`;
 }
 
 const getCurrentUserAPI = async () => {
-    const URL_API = "/authentication/current-user";
+    const URL_API = "/auth/current-user";
     return instance.get(URL_API);
 }
 
