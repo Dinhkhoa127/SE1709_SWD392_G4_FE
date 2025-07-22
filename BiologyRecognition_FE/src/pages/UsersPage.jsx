@@ -18,6 +18,7 @@ const UsersPage = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserInfo, setSelectedUserInfo] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
@@ -82,13 +83,21 @@ const UsersPage = () => {
 
   // Helper functions
   const handleViewUser = (userId) => {
+    console.log('Opening user detail modal for user ID:', userId); // Debug log
+    // Find user in current users array
+    const userInfo = users.find(user => (user.userAccountId || user.id) === userId);
+    console.log('Found user info:', userInfo); // Debug log
+    
     setSelectedUserId(userId);
+    setSelectedUserInfo(userInfo);
     setShowDetailModal(true);
   };
 
   const handleCloseDetailModal = () => {
+    console.log('Closing user detail modal'); // Debug log
     setShowDetailModal(false);
     setSelectedUserId(null);
+    setSelectedUserInfo(null);
   };
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
@@ -410,6 +419,7 @@ const UsersPage = () => {
         {showDetailModal && selectedUserId && (
           <ViewDetailUser
             userId={selectedUserId}
+            userInfo={selectedUserInfo}
             onClose={handleCloseDetailModal}
           />
         )}

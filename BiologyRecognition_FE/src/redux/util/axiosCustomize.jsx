@@ -18,6 +18,9 @@ instance.interceptors.request.use(
   (config) => {
     NProgress.start();
     
+    // Debug log for API calls
+    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, config);
+    
     // Tự động thêm token vào header nếu có
     const token = localStorage.getItem('accessToken'); // Sửa từ 'token' thành 'accessToken'
     if (token) {
@@ -36,10 +39,25 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => {
     NProgress.done();
+    console.log(`✅ API Success: ${response.config.method?.toUpperCase()} ${response.config.url}`, response);
     return response.data;
   },
   (error) => {
     NProgress.done();
+    
+    // Debug log for API errors
+    console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      error: error.message
+    });
+    
+    // Xử lý lỗi 405 (Method Not Allowed)
+    if (error.response?.status === 405) {
+      console.error('🚫 405 Method Not Allowed - The endpoint may not exist or the HTTP method is not supported');
+      console.error('Check if the API endpoint exists and supports the HTTP method being used');
+    }
     
     // Xử lý lỗi 401 (Unauthorized) - Token hết hạn hoặc không hợp lệ
     if (error.response?.status === 401) {
