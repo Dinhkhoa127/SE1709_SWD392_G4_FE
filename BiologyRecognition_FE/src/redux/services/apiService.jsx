@@ -9,8 +9,13 @@ const loginAPI = async (usernameOrEmail, password) => {
     return instance.post(URL_API, data);
 }
 
-const loginGoogleAPI = async () => {
-    window.location.href = `${import.meta.env.VITE_BE_API_URL}/authentication/login-google`;
+const loginGoogleAPI = async (redirectUrl = null) => {
+    // Tạo redirect URL mặc định nếu không được cung cấp
+    const defaultRedirect = window.location.origin + '/auth/google/callback';
+    const redirect = redirectUrl || defaultRedirect;
+    
+    // Redirect đến Google OAuth với callback URL
+    window.location.href = `${import.meta.env.VITE_BE_API_URL}/authentication/login-google?redirect=${encodeURIComponent(redirect)}`;
 }
 
 const getCurrentUserAPI = async () => {
