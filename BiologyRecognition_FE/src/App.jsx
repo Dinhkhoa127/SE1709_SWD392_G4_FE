@@ -11,6 +11,7 @@ import ArtifactsPage from "./pages/ArtifactsPage";
 import ArtifactTypesPage from "./pages/ArtifactTypesPage.jsx";
 import ArtifactMediasPage from "./pages/ArtifactMediasPage.jsx";
 import ArticlesPage from "./pages/ArticlesPage";
+import RecognitionsPage from "./pages/RecognitionsPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/Login.jsx";
@@ -63,6 +64,11 @@ function App() {
           <Route path="/articles" element={
             <ProtectedRoute>
               <ArticlesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recognitions" element={
+            <ProtectedRoute>
+              <RecognitionsPage />
             </ProtectedRoute>
           } />
           <Route path="/settings" element={

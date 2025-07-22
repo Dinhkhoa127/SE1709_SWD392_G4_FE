@@ -181,6 +181,56 @@ const EditModalTopic = ({ open, onClose, onSubmit, initialData, loading }) => {
                 }}
               />
             </div>
+            
+            {/* Thông tin người tạo và ngày tạo - chỉ hiện trong view mode */}
+            {!isEditing && initialData && (
+              <>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Người tạo</label>
+                    <input
+                      type="text"
+                      value={initialData.createdName || initialData.CreatedBy || 'Không có thông tin'}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', color: '#666' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Ngày tạo</label>
+                    <input
+                      type="text"
+                      value={initialData.createdDate || initialData.CreatedDate ? 
+                        new Date(initialData.createdDate || initialData.CreatedDate).toLocaleDateString('vi-VN') : 
+                        'Không có thông tin'}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', color: '#666' }}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Người sửa cuối</label>
+                    <input
+                      type="text"
+                      value={initialData.modifiedName || initialData.ModifiedBy || 'Không có thông tin'}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', color: '#666' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Ngày sửa cuối</label>
+                    <input
+                      type="text"
+                      value={initialData.modifiedDate || initialData.ModifiedDate ? 
+                        new Date(initialData.modifiedDate || initialData.ModifiedDate).toLocaleDateString('vi-VN') : 
+                        'Không có thông tin'}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', color: '#666' }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </form>
 
         <div className="action-buttons">

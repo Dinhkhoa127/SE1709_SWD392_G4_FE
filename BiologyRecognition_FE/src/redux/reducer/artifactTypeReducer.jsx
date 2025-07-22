@@ -47,6 +47,7 @@ const artifactTypeReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        artifactTypes: [], // Clear array on failure like other reducers
         error: action.payload
       };
 

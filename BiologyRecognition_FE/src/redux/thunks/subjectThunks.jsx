@@ -18,21 +18,21 @@ import {
 
 import {
   getSubjectsAPI,
-  getSubjectByIdAPI,
   createSubjectAPI,
   updateSubjectAPI,
   deleteSubjectAPI
 } from '../services/apiService';
 
 // Thunk để fetch tất cả subjects
-export const fetchSubjects = () => {
+export const fetchSubjects = (params = {}) => {
   return async (dispatch) => {
     dispatch(fetchSubjectsRequest());
     try {
-      const response = await getSubjectsAPI();
+      const response = await getSubjectsAPI(params);
       dispatch(fetchSubjectsSuccess(response.data || response));
     } catch (error) {
-      dispatch(fetchSubjectsFailure(error.response?.data?.message || error.message || 'Failed to fetch subjects'));
+      // Don't show error message, just clear results
+      dispatch(fetchSubjectsFailure(''));
     }
   };
 };
@@ -42,10 +42,24 @@ export const fetchSubjectById = (subjectId) => {
   return async (dispatch) => {
     dispatch(fetchSubjectByIdRequest());
     try {
-      const response = await getSubjectByIdAPI(subjectId);
+      const response = await getSubjectsAPI({ id: subjectId });
       dispatch(fetchSubjectByIdSuccess(response.data || response));
     } catch (error) {
       dispatch(fetchSubjectByIdFailure(error.response?.data?.message || error.message || 'Failed to fetch subject'));
+    }
+  };
+};
+
+// Thunk để search subjects theo tên với pagination
+export const searchSubjectsByName = (params) => {
+  return async (dispatch) => {
+    dispatch(fetchSubjectsRequest());
+    try {
+      const response = await getSubjectsAPI(params);
+      dispatch(fetchSubjectsSuccess(response.data || response));
+    } catch (error) {
+      // Don't show error message for search failures, just clear results
+      dispatch(fetchSubjectsFailure(''));
     }
   };
 };
@@ -57,7 +71,7 @@ export const createSubject = (subjectData) => {
     try {
       const response = await createSubjectAPI(subjectData);
       dispatch(createSubjectSuccess(response.data || response));
-      dispatch(fetchSubjects());
+      // Remove auto refresh - let component handle it
       return Promise.resolve(response);
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to create subject';
@@ -79,7 +93,7 @@ export const updateSubject = ({ subjectId, data }) => {
       
       const response = await updateSubjectAPI(dataToSend);
       dispatch(updateSubjectSuccess(response.data || response));
-      dispatch(fetchSubjects());
+      // Remove auto refresh - let component handle it
       return Promise.resolve(response);
     } catch (error) {
       dispatch(updateSubjectFailure(error.response?.data?.message || error.message || 'Failed to update subject'));

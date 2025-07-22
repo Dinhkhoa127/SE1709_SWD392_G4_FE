@@ -52,7 +52,8 @@ const artifactReducer = (state = initialState, action) => {
             return {
                 ...state,
                 loading: false,
-                error: action.payload
+                error: action.payload,
+                artifacts: [] // Clear artifacts when search fails
             };
 
         // Fetch artifact by ID

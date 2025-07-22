@@ -140,7 +140,7 @@ const AdminPage = () => {
                     <div className="stat-icon users-icon"><i className="fas fa-users"></i></div>
                     <div>
                       <div className="stat-value">8</div>
-                      <div className="stat-label">Người dùng</div>
+                      <div className="stat-label">Lịch sử nhận diện</div>
                     </div>
                   </div>
                 </div>
@@ -287,7 +287,7 @@ const AdminPage = () => {
                     </div>
                     <p>Quản lý hình ảnh của các mẫu sinh vật, upload, xem chi tiết, chỉnh sửa và phân loại hình ảnh.</p>
                     <div className="action-buttons">
-                      <button className="btn btn-primary" onClick={() => navigate('/artifact-images')}>
+                      <button className="btn btn-primary" onClick={() => navigate('/artifact-medias')}>
                         <i className="fas fa-arrow-right"></i>
                         Quản lí
                       </button>
@@ -303,12 +303,12 @@ const AdminPage = () => {
                         <div className="card-icon users-icon">
                           <i className="fas fa-users"></i>
                         </div>
-                        Quản lí người dùng
+                        Quản lí lịch sử nhận diện
                       </div>
                     </div>
-                    <p>Quản lý tài khoản người dùng, phân quyền và theo dõi hoạt động của người dùng trong hệ thống.</p>
+                    <p>Quản lý lịch sử những lần nhận diện trong app nhận diện các mẫu vật sinh học của học sinh.</p>
                     <div className="action-buttons">
-                      <button className="btn btn-primary" onClick={() => navigate('/users')}>
+                      <button className="btn btn-primary" onClick={() => navigate('/recognitions')}>
                         <i className="fas fa-arrow-right"></i>
                         Quản lí
                       </button>

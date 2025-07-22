@@ -47,6 +47,7 @@ const artifactMediaReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        artifactMedia: [],
         error: action.payload
       };
 

@@ -19,28 +19,84 @@ import {
 
 import {
   getArticlesAPI,
-  getArticleByIdAPI,
+
   createArticleAPI,
   updateArticleAPI,
   deleteArticleAPI
 } from '../services/apiService';
 
-// Fetch all articles
-export const fetchArticlesThunk = () => {
+// Fetch all articles with parameters
+export const fetchArticlesThunk = (params = {}) => {
   return async (dispatch) => {
     dispatch(fetchArticlesRequest());
     
     try {
-      const response = await getArticlesAPI();
+      console.log('fetchArticlesThunk - params:', params);
+      let response;
+      if (params.artifactName) {
+        // Use get API with artifactName parameter
+        response = await getArticlesAPI(params);
+      } else {
+        // Use regular API with pagination parameters
+        response = await getArticlesAPI(params);
+      }
+      
+      console.log('fetchArticlesThunk - API response:', response);
       
       // API trả về array trực tiếp hoặc trong response.data
       const articles = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+      
+      console.log('fetchArticlesThunk - processed articles:', articles);
+      
+      // Debug each article's structure
+      articles.forEach((article, index) => {
+        console.log(`Regular Article ${index}:`, {
+          id: article.articleId || article.article_id,
+          title: article.title,
+          artifactIds: article.artifactIds,
+          artifacts: article.artifacts,
+          allFields: Object.keys(article)
+        });
+      });
       
       dispatch(fetchArticlesSuccess(articles));
       return articles;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải danh sách bài viết';
-      dispatch(fetchArticlesFailure(errorMessage));
+      dispatch(fetchArticlesFailure(''));
+      throw error;
+    }
+  };
+};
+
+// Search articles with pagination
+export const searchArticles = (params) => {
+  return async (dispatch) => {
+    dispatch(fetchArticlesRequest());
+    
+    try {
+      console.log('searchArticles - params:', params);
+      const response = await getArticlesAPI(params);
+      console.log('searchArticles - API response:', response);
+      
+      const articles = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+      console.log('searchArticles - processed articles:', articles);
+      
+      // Debug each article's structure
+      articles.forEach((article, index) => {
+        console.log(`Article ${index}:`, {
+          id: article.articleId || article.article_id,
+          title: article.title,
+          artifactIds: article.artifactIds,
+          artifacts: article.artifacts,
+          allFields: Object.keys(article)
+        });
+      });
+      
+      dispatch(fetchArticlesSuccess(articles));
+      return articles;
+    } catch (error) {
+      dispatch(fetchArticlesFailure(''));
       throw error;
     }
   };
@@ -50,12 +106,12 @@ export const fetchArticlesThunk = () => {
 export const fetchArticleByIdThunk = (articleId) => {
   return async (dispatch) => {
     dispatch(fetchArticleByIdRequest());
-    
     try {
-      const response = await getArticleByIdAPI(articleId);
-      dispatch(fetchArticleByIdSuccess(response.data));
-      dispatch(setSelectedArticle(response.data));
-      return response.data;
+      const response = await getArticlesAPI({ articleId });
+      const articleData = Array.isArray(response.data) ? response.data[0] : response.data || response;
+      dispatch(fetchArticleByIdSuccess(articleData));
+      dispatch(setSelectedArticle(articleData));
+      return articleData;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải thông tin bài viết';
       dispatch(fetchArticleByIdFailure(errorMessage));

@@ -9,12 +9,13 @@ const Navbar = ({ activeSection, isCollapsed }) => {
   const navItems = [
   { id: 'dashboard', icon: 'fa fa-bar-chart', text: 'Tổng hợp', path: '/admin' },
     { id: 'subjects', icon: 'fas fa-book', text: 'Môn học', path: '/subjects' },
+     { id: 'chapters', icon: 'fas fa-bookmark', text: 'Chương', path: '/chapters' },
       { id: 'topics', icon: 'fas fa-tags', text: 'Chủ đề', path: '/topics' },
-    { id: 'chapters', icon: 'fas fa-bookmark', text: 'Chương', path: '/chapters' },
-    { id: 'artifacts', icon: 'fas fa-microscope', text: 'Mẫu sinh vật', path: '/artifacts' },
-    { id: 'artifact-types', icon: 'fa-solid fa-seedling', text: 'Loại mẫu sinh vật', path: '/artifact-types' },
-    { id: 'artifact-medias', icon: 'fas fa-image', text: 'Hình ảnh mẫu sinh vật', path: '/artifact-medias' },
+    { id: 'artifacts', icon: 'fas fa-microscope', text: 'Mẫu  vật', path: '/artifacts' },
+    { id: 'artifact-types', icon: 'fa-solid fa-seedling', text: 'Loại mẫu vật', path: '/artifact-types' },
+    { id: 'artifact-medias', icon: 'fas fa-image', text: 'Hình ảnh mẫu  vật', path: '/artifact-medias' },
     { id: 'articles', icon: 'fas fa-newspaper', text: 'Bài báo', path: '/articles' },
+    { id: 'recognitions', icon: 'fas fa-brain', text: 'Nhận diện', path: '/recognitions' },
     { id: 'settings', icon: 'fas fa-cog', text: 'Cài đặt', path: '/settings' }
   ];
 

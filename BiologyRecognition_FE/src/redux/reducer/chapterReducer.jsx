@@ -45,7 +45,8 @@ const chapterReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        error: action.payload
+        error: action.payload,
+        chapters: [] // Clear chapters when search fails
       };
     case CREATE_CHAPTER_REQUEST:
       return {

@@ -25,7 +25,8 @@ const EditModalArtifactMedia = ({ open, onClose, onSubmit, loading, artifactMedi
 
     useEffect(() => {
         if (open) {
-            dispatch(fetchArtifactTypes());
+            // Force fetch all artifact types every time modal opens
+            dispatch(fetchArtifactTypes({ page: 1, pageSize: 100 }));
             if (artifactMedia) {
                 setForm({
                     artifactMediaId: artifactMedia.artifactMediaId || '',

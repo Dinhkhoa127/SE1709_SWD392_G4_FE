@@ -18,23 +18,22 @@ import {
 
 import {
     getArtifactsAPI,
-    getArtifactByIdAPI,
+   
     createArtifactAPI,
     updateArtifactAPI,
     deleteArtifactAPI
 } from '../services/apiService';
 
 // Fetch all artifacts
-export const fetchArtifactsThunk = () => {
+export const fetchArtifactsThunk = (params = {}) => {
     return async (dispatch) => {
         dispatch(fetchArtifactsRequest());
         try {
-            const response = await getArtifactsAPI();
-            // Vì axios interceptor đã return response.data, nên response chính là data
-            dispatch(fetchArtifactsSuccess(response));
+            const response = await getArtifactsAPI(params);
+            dispatch(fetchArtifactsSuccess(response.data || response));
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải dữ liệu artifacts';
-            dispatch(fetchArtifactsFailure(errorMessage));
+            // Don't show error message for search failures, just clear results
+            dispatch(fetchArtifactsFailure(''));
         }
     };
 };
@@ -44,8 +43,9 @@ export const fetchArtifactByIdThunk = (artifactId) => {
     return async (dispatch) => {
         dispatch(fetchArtifactByIdRequest());
         try {
-            const response = await getArtifactByIdAPI(artifactId);
-            dispatch(fetchArtifactByIdSuccess(response.data));
+            const response = await getArtifactsAPI({ artifactId });
+            const artifactData = Array.isArray(response.data) ? response.data[0] : response.data || response;
+            dispatch(fetchArtifactByIdSuccess(artifactData));
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải artifact';
             dispatch(fetchArtifactByIdFailure(errorMessage));

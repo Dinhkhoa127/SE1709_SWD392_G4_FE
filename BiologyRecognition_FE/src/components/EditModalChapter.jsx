@@ -44,7 +44,7 @@ const EditModalChapter = ({ open, onClose, onSubmit, initialData, loading }) => 
   // Fetch subjects when modal opens
   useEffect(() => {
     if (open) {
-      dispatch(fetchSubjects());
+      dispatch(fetchSubjects({}));
     }
   }, [open, dispatch]);
 
@@ -129,6 +129,27 @@ const EditModalChapter = ({ open, onClose, onSubmit, initialData, loading }) => 
               rows="4"
               disabled={!isEditing}
               required
+            />
+          </div>
+
+          {/* Read-only fields for created date and created by */}
+          <div className="form-group half-width">
+            <label>Ngày tạo</label>
+            <input
+              type="text"
+              value={initialData?.createdDate ? new Date(initialData.createdDate).toLocaleDateString('vi-VN') : ''}
+              disabled
+              className="readonly-field"
+            />
+          </div>
+
+          <div className="form-group half-width">
+            <label>Người tạo</label>
+            <input
+              type="text"
+              value={initialData?.createdName || initialData?.createdBy || ''}
+              disabled
+              className="readonly-field"
             />
           </div>
         </form>

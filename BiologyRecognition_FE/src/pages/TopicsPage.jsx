@@ -8,7 +8,7 @@ import CreateModalTopic from '../components/CreateModalTopic.jsx';
 import EditModalTopic from '../components/EditModalTopic.jsx';
 import DeleteModal from '../components/DeleteModal.jsx';
 
-import { fetchTopics, fetchTopicById, createTopic, updateTopic, deleteTopic } from '../redux/thunks/topicThunks.jsx';
+import { fetchTopics, fetchTopicById, createTopic, updateTopic, deleteTopic, searchTopicsByName } from '../redux/thunks/topicThunks.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
 import { formatDate } from '../utils/dateUtils';
 
@@ -29,12 +29,37 @@ const TopicsPage = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   // Fetch topics and current user when component mount
   useEffect(() => {
-    dispatch(fetchTopics());
+    const fetchData = () => {
+      if (searchTerm.trim()) {
+        // Use search API for searching
+        dispatch(searchTopicsByName(searchTerm));
+      } else {
+        // Use paginated API for normal listing
+        dispatch(fetchTopics({
+          page: currentPage,
+          pageSize: pageSize
+        }));
+      }
+    };
+
+    fetchData();
     dispatch(fetchCurrentUser());
-  }, [dispatch]);
+  }, [dispatch, currentPage, pageSize]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   // Lưu trạng thái collapsed vào localStorage khi thay đổi
   const handleToggleCollapse = () => {
@@ -43,12 +68,72 @@ const TopicsPage = () => {
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
   };
 
-  // Filter topics based on search term
-  const filteredTopics = (Array.isArray(topics) ? topics : []).filter(topic =>
-    topic.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (topic.chapterName || topic.chapter)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    topic.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter topics based on search term - handle both paginated and non-paginated response
+  const displayTopics = Array.isArray(topics) ? topics : [];
+
+  // Handle search with debounce
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+    
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout
+    const newTimeout = setTimeout(() => {
+      const params = {
+        page: 1,
+        pageSize: pageSize
+      };
+      
+      if (value.trim()) {
+        // Add name parameter for search
+        params.name = value.trim();
+      }
+      
+      // Use the same fetchTopics thunk for both search and regular fetch
+      dispatch(fetchTopics(params));
+    }, 500);
+    
+    setSearchTimeout(newTimeout);
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    
+    const params = {
+      page: newPage,
+      pageSize: pageSize
+    };
+    
+    // Include search term if present
+    if (searchTerm.trim()) {
+      params.name = searchTerm.trim();
+    }
+    
+    dispatch(fetchTopics(params));
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+    
+    const params = {
+      page: 1,
+      pageSize: newPageSize
+    };
+    
+    // Include search term if present
+    if (searchTerm.trim()) {
+      params.name = searchTerm.trim();
+    }
+    
+    dispatch(fetchTopics(params));
+  };
   
   // Helper function to highlight search term in text
   const highlightText = (text, searchTerm) => {
@@ -70,6 +155,17 @@ const TopicsPage = () => {
       .then(() => {
         setShowCreate(false);
         toast.success('Tạo chủ đề thành công!');
+        // Refresh with current pagination and search state
+        const params = {
+          page: currentPage,
+          pageSize: pageSize
+        };
+        
+        if (searchTerm.trim()) {
+          params.name = searchTerm.trim();
+        }
+        
+        dispatch(fetchTopics(params));
       })
       .catch(() => {
         toast.error('Có lỗi xảy ra khi tạo chủ đề!');
@@ -94,7 +190,6 @@ const TopicsPage = () => {
       const topicId = topicToUpdate.topicId || topicToUpdate.topic_id;
       
       if (!topicId) {
-
         return;
       }
       
@@ -106,6 +201,17 @@ const TopicsPage = () => {
         setShowEdit(false);
         setSelectedTopic(null);
         toast.success('Cập nhật chủ đề thành công!');
+        // Refresh with current pagination and search state
+        const params = {
+          page: currentPage,
+          pageSize: pageSize
+        };
+        
+        if (searchTerm.trim()) {
+          params.name = searchTerm.trim();
+        }
+        
+        dispatch(fetchTopics(params));
       })
       .catch((error) => {
         toast.error('Có lỗi xảy ra khi cập nhật chủ đề!');
@@ -125,6 +231,17 @@ const TopicsPage = () => {
           setShowDelete(false);
           setSelectedTopic(null);
           toast.success('Xóa chủ đề thành công!');
+          // Refresh with current pagination and search state
+          const params = {
+            page: currentPage,
+            pageSize: pageSize
+          };
+          
+          if (searchTerm.trim()) {
+            params.name = searchTerm.trim();
+          }
+          
+          dispatch(fetchTopics(params));
         })
         .catch(() => {
           toast.error('Có lỗi xảy ra khi xóa chủ đề!');
@@ -162,15 +279,15 @@ const TopicsPage = () => {
                 <i className="fas fa-search search-icon"></i>
                 <input
                   type="text"
-                  placeholder="Tìm kiếm theo tên chủ đề, chương hoặc mô tả..."
+                  placeholder="Tìm kiếm theo tên chủ đề"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="search-input"
                 />
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => handleSearchChange('')}
                     className="clear-search-btn"
                     title="Xóa tìm kiếm"
                   >
@@ -180,18 +297,10 @@ const TopicsPage = () => {
               </div>
               {searchTerm && (
                 <div className="search-results-info">
-                  Tìm thấy {filteredTopics.length} kết quả cho "{searchTerm}"
+                  Tìm thấy {displayTopics.length} kết quả cho "<strong>{searchTerm}</strong>"
                 </div>
               )}
             </div>
-            
-            {/* Error state */}
-            {error && (
-              <div className="error-container">
-                <i className="fas fa-exclamation-triangle"></i> 
-                <span>{error}</span>
-              </div>
-            )}
             
             <div className="table-responsive">
               <table className="data-table">
@@ -199,34 +308,24 @@ const TopicsPage = () => {
                   <tr>
                     <th>Tên chủ đề</th>
                     <th>Chương</th>
-                    <th>Mô tả</th>
-                    <th>Ngày tạo</th>
-                    <th>Người tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th>Ngày sửa cuối</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {!loading && filteredTopics.length === 0 ? (
+                  {!loading && displayTopics.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="empty-state">
+                      <td colSpan="3" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
-                        Không có dữ liệu chủ đề
+                        {searchTerm ? `Không tìm thấy chủ đề nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu chủ đề'}
                       </td>
                     </tr>
                   ) : (
-                    filteredTopics.map(topic => (
+                    displayTopics.map(topic => (
                       <tr key={topic.topicId || topic.topic_id}>
                         <td>{highlightText(topic.name, searchTerm)}</td>
                         <td>{highlightText(topic.chapterName || topic.chapter, searchTerm)}</td>
-                        <td>{highlightText(topic.description, searchTerm)}</td>
-                        <td>{formatDate(topic.createdDate || topic.CreatedDate)}</td>
-                        <td>{topic.createdName || topic.CreatedBy}</td>
-                        <td>{topic.modifiedName || topic.ModifiedBy}</td>
-                        <td>{formatDate(topic.modifiedDate || topic.ModifiedDate)}</td>
                         <td>
                           <div className="action-buttons-container">
                             <button
@@ -252,6 +351,47 @@ const TopicsPage = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+            
+            {/* Pagination Controls - Show for both search and regular fetch */}
+            <div className="pagination-container">
+              <div className="pagination-info">
+                <span>Hiển thị</span>
+                <select 
+                  value={pageSize} 
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>mục mỗi trang</span>
+              </div>
+              
+              <div className="pagination-controls">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1 || loading}
+                  className={`pagination-btn ${currentPage <= 1 || loading ? 'disabled' : 'enabled'}`}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                  Trước
+                </button>
+                
+                <div className="pagination-current-page">
+                  Trang {currentPage}
+                </div>
+                
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={displayTopics.length < pageSize || loading}
+                  className={`pagination-btn ${displayTopics.length < pageSize || loading ? 'disabled' : 'enabled'}`}
+                >
+                  Sau
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
             
             <CreateModalTopic 

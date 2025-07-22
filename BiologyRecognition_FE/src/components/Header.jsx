@@ -15,8 +15,12 @@ const Header = ({ activeSection, isCollapsed, onToggleCollapse }) => {
       'dashboard': 'Dashboard',
       'subjects': 'Subjects Management',
       'chapters': 'Chapters Management',
+      'topics': 'Topics Management',
       'artifacts': 'Artifacts Management',
+      'artifact-types': 'Artifact Types Management',
+      'artifact-medias': 'Artifact Medias Management',
       'articles': 'Articles Management',
+      'recognitions': 'Recognition Management',
       'settings': 'System Settings'
     };
     return sectionNames[section] || 'Dashboard';
