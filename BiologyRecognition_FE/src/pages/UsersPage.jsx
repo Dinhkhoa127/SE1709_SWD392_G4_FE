@@ -5,11 +5,12 @@ import { fetchUsersThunk, deleteUserThunk } from '../redux/thunks/userThunks';
 import { clearUserError } from '../redux/actions/userActions';
 import { formatDate } from '../utils/dateUtils';
 import ViewDetailUser from '../components/ViewDetailUser';
+import CreateModalUser from '../components/CreateModalUser';
 import '../styles/UsersPage.css';
 
 const UsersPage = () => {
   const dispatch = useDispatch();
-  const { users = [], loadingUsers, usersError, deleting } = useSelector((state) => state.user || {});
+  const { users = [], loadingUsers, usersError, deleting, creating } = useSelector((state) => state.user || {});
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -20,6 +21,7 @@ const UsersPage = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedUserInfo, setSelectedUserInfo] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   // Debounce search term
@@ -98,6 +100,18 @@ const UsersPage = () => {
     setShowDetailModal(false);
     setSelectedUserId(null);
     setSelectedUserInfo(null);
+  };
+
+  const handleCreateUser = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    // Refresh danh sách sau khi đóng modal để đảm bảo hiển thị user mới
+    setTimeout(() => {
+      handleRefresh();
+    }, 500);
   };
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
@@ -201,6 +215,14 @@ const UsersPage = () => {
             <div className="controls-header">
               <h2 className="controls-title">Danh sách người dùng</h2>
               <div className="controls-actions">
+                <button 
+                  className="users-btn users-btn-primary" 
+                  onClick={handleCreateUser}
+                  disabled={creating}
+                >
+                  <i className={`fas ${creating ? 'fa-spinner fa-spin' : 'fa-plus'}`}></i>
+                  Tạo tài khoản
+                </button>
                 <button 
                   className="users-btn users-btn-outline" 
                   onClick={handleRefresh}
@@ -421,6 +443,14 @@ const UsersPage = () => {
             userId={selectedUserId}
             userInfo={selectedUserInfo}
             onClose={handleCloseDetailModal}
+          />
+        )}
+
+        {/* Create User Modal */}
+        {showCreateModal && (
+          <CreateModalUser
+            open={showCreateModal}
+            onClose={handleCloseCreateModal}
           />
         )}
       </div>

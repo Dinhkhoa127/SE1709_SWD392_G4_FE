@@ -108,6 +108,8 @@ export const createUserThunk = (userData) => {
     
     try {
       const response = await createUserAPI(userData);
+      console.log('Create user response:', response); // Debug log
+      
       dispatch(createUserSuccess(response.data || response));
       
       // Refresh users list after create
@@ -115,7 +117,21 @@ export const createUserThunk = (userData) => {
       
       return response.data || response;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tạo người dùng';
+      console.error('Create user error:', error); // Debug log
+      
+      // Nếu lỗi 500 nhưng có thể user đã được tạo, vẫn refresh danh sách
+      if (error.response?.status === 500) {
+        console.log('Server error 500, refreshing user list to check if user was created');
+        // Refresh để kiểm tra xem user có được tạo không
+        setTimeout(() => {
+          dispatch(fetchUsersThunk());
+        }, 1000);
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Lỗi khi tạo người dùng';
       dispatch(createUserFailure(errorMessage));
       throw error;
     }

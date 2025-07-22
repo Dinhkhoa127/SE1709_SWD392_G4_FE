@@ -191,8 +191,16 @@ const getUserByIdAPI = async (userId) => {
 }
 
 const createUserAPI = async (userData) => {
-    const URL_API = "/user";
-    return instance.post(URL_API, userData);
+    const URL_API = "/user-accounts";
+    console.log('Sending create user request:', userData); // Debug log
+    try {
+        const response = await instance.post(URL_API, userData);
+        console.log('Create user API response:', response); // Debug log
+        return response;
+    } catch (error) {
+        console.error('Create user API error:', error); // Debug log
+        throw error;
+    }
 }
 
 const updateUserAPI = async (userData) => {
