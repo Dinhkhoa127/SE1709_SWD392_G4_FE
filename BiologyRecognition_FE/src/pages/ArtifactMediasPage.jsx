@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
@@ -8,7 +8,7 @@ import CreateModalArtifactMedia from '../components/CreateModalArtifactMedia.jsx
 import EditModalArtifactMedia from '../components/EditModalArtifactMedia.jsx';
 import DeleteModal from '../components/DeleteModal.jsx';
 
-import { fetchArtifactMedia, fetchArtifactMediaById, createArtifactMedia, updateArtifactMedia, deleteArtifactMedia } from '../redux/thunks/artifactMediaThunks.jsx';
+import { fetchArtifactMedia, searchArtifactMedia, fetchArtifactMediaById, createArtifactMedia, updateArtifactMedia, deleteArtifactMedia } from '../redux/thunks/artifactMediaThunks.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
 import { fetchArtifactTypes } from '../redux/thunks/artifactTypeThunks.jsx';
 
@@ -30,26 +30,24 @@ const ArtifactMediasPage = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const searchTermRef = useRef('');
 
   // Helper function to get artifact name from artifactId
   const getArtifactName = (artifactId) => {
-    const artifact = artifactTypes.find(a => a.artifactTypeId === artifactId);
-    return artifact ? artifact.name : `Artifact ID: ${artifactId}`;
+    // First try to find in artifactTypes
+    const artifactType = artifactTypes?.find(a => a.artifactTypeId === artifactId);
+    if (artifactType) {
+      return artifactType.artifactTypeName || artifactType.name || artifactType.topicName;
+    }
+    
+    // If not found, return the ID for debugging
+    return `Artifact Type ID: ${artifactId}`;
   };
-
-  // Filter artifact media based on search term
-  const filteredArtifactMedia = (Array.isArray(artifactMedia) ? artifactMedia : []).filter(media => {
-    const artifactName = getArtifactName(media.artifactId);
-    return (
-      media.artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artifactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      media.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      media.url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      media.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
 
   // Helper function to render media preview based on type
   const renderMediaPreview = (media) => {
@@ -145,12 +143,108 @@ const ArtifactMediasPage = () => {
     );
   };
 
-  // Fetch artifact media and current user when component mount
+  // Cleanup timeout on unmount
   useEffect(() => {
-    dispatch(fetchArtifactMedia());
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
+  // Fetch artifact media when component mount or pagination changes
+  useEffect(() => {
+    // Only fetch with pagination if no search term in ref
+    if (!searchTermRef.current.trim()) {
+      dispatch(fetchArtifactMedia({ 
+        page: currentPage, 
+        pageSize: pageSize 
+      }));
+    }
+  }, [dispatch, currentPage, pageSize]);
+
+  // Fetch other data once on mount
+  useEffect(() => {
     dispatch(fetchCurrentUser());
-    dispatch(fetchArtifactTypes());
+    // Force fetch all artifact types with high page size
+    dispatch(fetchArtifactTypes({ page: 1, pageSize: 100 }));
   }, [dispatch]);
+
+  // Handle search with debounce
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    searchTermRef.current = value; // Update ref immediately
+    setCurrentPage(1); // Reset to first page when searching
+    
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for debounced search
+    const timeout = setTimeout(() => {
+      if (value.trim()) {
+        // Use search API with pagination
+        dispatch(searchArtifactMedia({
+          artifactName: value.trim(),
+          page: 1,
+          pageSize: pageSize
+        }));
+      } else {
+        // Use regular fetch API with pagination
+        dispatch(fetchArtifactMedia({
+          page: 1,
+          pageSize: pageSize
+        }));
+      }
+    }, 300);
+    
+    setSearchTimeout(timeout);
+  };
+
+  // Display artifacts from server response (no client-side filtering)
+  const displayedArtifactMedia = Array.isArray(artifactMedia) ? artifactMedia : [];
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    
+    // Use search + pagination if there's a search term
+    if (searchTerm.trim()) {
+      dispatch(searchArtifactMedia({
+        artifactName: searchTerm.trim(),
+        page: newPage,
+        pageSize: pageSize
+      }));
+    } else {
+      // Use regular pagination when no search term
+      dispatch(fetchArtifactMedia({ 
+        page: newPage,
+        pageSize: pageSize
+      }));
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+    
+    // Use search + pagination if there's a search term
+    if (searchTerm.trim()) {
+      dispatch(searchArtifactMedia({
+        artifactName: searchTerm.trim(),
+        page: 1,
+        pageSize: newPageSize
+      }));
+    } else {
+      // Use regular pagination when no search term
+      dispatch(fetchArtifactMedia({ 
+        page: 1,
+        pageSize: newPageSize
+      }));
+    }
+  };
 
   // Lưu trạng thái collapsed vào localStorage khi thay đổi
   const handleToggleCollapse = () => {
@@ -165,6 +259,21 @@ const ArtifactMediasPage = () => {
       .then(() => {
         setShowCreate(false);
         toast.success('Tạo media mẫu vật thành công!');
+        
+        // Use search + pagination if there's a search term
+        if (searchTerm.trim()) {
+          dispatch(searchArtifactMedia({
+            artifactName: searchTerm.trim(),
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        } else {
+          // Use regular pagination when no search term
+          dispatch(fetchArtifactMedia({ 
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        }
       })
       .catch(() => {
         toast.error('Có lỗi xảy ra khi tạo media mẫu vật!');
@@ -182,6 +291,21 @@ const ArtifactMediasPage = () => {
         setShowEdit(false);
         setSelectedMedia(null);
         toast.success('Cập nhật media mẫu vật thành công!');
+        
+        // Use search + pagination if there's a search term
+        if (searchTerm.trim()) {
+          dispatch(searchArtifactMedia({
+            artifactName: searchTerm.trim(),
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        } else {
+          // Use regular pagination when no search term
+          dispatch(fetchArtifactMedia({ 
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        }
       })
       .catch(() => {
         toast.error('Có lỗi xảy ra khi cập nhật media mẫu vật!');
@@ -200,6 +324,21 @@ const ArtifactMediasPage = () => {
           setShowDelete(false);
           setSelectedMedia(null);
           toast.success('Xóa media mẫu vật thành công!');
+          
+          // Use search + pagination if there's a search term
+          if (searchTerm.trim()) {
+            dispatch(searchArtifactMedia({
+              artifactName: searchTerm.trim(),
+              page: currentPage,
+              pageSize: pageSize
+            }));
+          } else {
+            // Use regular pagination when no search term
+            dispatch(fetchArtifactMedia({ 
+              page: currentPage,
+              pageSize: pageSize
+            }));
+          }
         })
         .catch(() => {
           toast.error('Có lỗi xảy ra khi xóa media mẫu vật!');
@@ -268,15 +407,15 @@ const ArtifactMediasPage = () => {
                 <i className="fas fa-search search-icon"></i>
                 <input
                   type="text"
-                  placeholder="Tìm kiếm theo tên tài liệu, mẫu vật, loại, URL hoặc mô tả..."
+                  placeholder="Tìm kiếm theo mẫu vật"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="search-input"
                 />
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => handleSearchChange('')}
                     className="clear-search-btn"
                     title="Xóa tìm kiếm"
                   >
@@ -286,7 +425,7 @@ const ArtifactMediasPage = () => {
               </div>
               {searchTerm && (
                 <div className="search-results-info">
-                  Tìm thấy {filteredArtifactMedia.length} kết quả cho "{searchTerm}"
+                  Tìm thấy {displayedArtifactMedia.length} kết quả cho "<strong>{searchTerm}</strong>"
                 </div>
               )}
             </div>
@@ -296,28 +435,18 @@ const ArtifactMediasPage = () => {
                 <thead>
                   <tr>
                     <th>Tên mẫu vật</th>
-                    <th>Loại mẫu sinh vật</th>
-                    <th>Loại</th>
-                    <th>Preview</th>
-                    <th>Mô tả</th>
+                    <th>Loại mẫu vật</th>
+                   
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredArtifactMedia && filteredArtifactMedia.length > 0 ? (
-                    filteredArtifactMedia.map(media => (
+                  {Array.isArray(displayedArtifactMedia) && displayedArtifactMedia.length > 0 ? (
+                    displayedArtifactMedia.map(media => (
                       <tr key={media.artifactMediaId}>
                         <td>{highlightText(media.artifactName, searchTerm)}</td>
                         <td>{highlightText(getArtifactName(media.artifactId), searchTerm)}</td>
-                        <td>
-                          <span className={`media-type-badge ${media.type?.toLowerCase()}`}>
-                            {media.type}
-                          </span>
-                        </td>
-                        <td>
-                          {renderMediaPreview(media)}
-                        </td>
-                        <td>{highlightText(media.description, searchTerm)}</td>
+                     
                         <td>
                           <button 
                             className="btn btn-sm btn-edit" 
@@ -340,13 +469,57 @@ const ArtifactMediasPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center">
+                      <td colSpan="4" className="text-center">
+                        <div className="empty-state-icon">
+                          <i className="fas fa-inbox"></i>
+                        </div>
                         {searchTerm ? `Không tìm thấy media nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu media mẫu vật'}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="pagination-container">
+              <div className="pagination-info">
+                <span>Hiển thị</span>
+                <select 
+                  value={pageSize} 
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>mục mỗi trang</span>
+              </div>
+              
+              <div className="pagination-controls">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1 || loading}
+                  className={`pagination-btn ${currentPage <= 1 || loading ? 'disabled' : 'enabled'}`}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                  Trước
+                </button>
+                
+                <div className="pagination-current-page">
+                  Trang {currentPage}
+                </div>
+                
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={loading || (Array.isArray(artifactMedia) && artifactMedia.length < pageSize)}
+                  className={`pagination-btn ${loading || (Array.isArray(artifactMedia) && artifactMedia.length < pageSize) ? 'disabled' : 'enabled'}`}
+                >
+                  Sau
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
           </div>
         </main>

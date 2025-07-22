@@ -65,16 +65,16 @@ export const fetchCurrentUser = () => {
 };
 
 // Users Management Thunks
-// Fetch all users
-export const fetchUsersThunk = () => {
+// Fetch all users with pagination
+export const fetchUsersThunk = (params = {}) => {
   return async (dispatch) => {
     dispatch(fetchUsersRequest());
     
     try {
-      const response = await getUsersAPI();
+      const response = await getUsersAPI(params);
       const users = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
       dispatch(fetchUsersSuccess(users));
-      return users;
+      return response; // Return full response to get pagination info
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải danh sách người dùng';
       dispatch(fetchUsersFailure(errorMessage));

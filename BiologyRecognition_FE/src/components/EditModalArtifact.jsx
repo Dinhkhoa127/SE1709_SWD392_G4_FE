@@ -4,14 +4,15 @@ import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import { 
     getSubjectsAPI, 
-    getChaptersBySubjectAPI, 
-    getTopicsByChapterAPI, 
-    getArtifactTypesByTopicAPI 
+    getChaptersAPI, 
+    getTopicsAPI, 
+    getArtifactTypesAPI 
 } from '../redux/services/apiService';
 import '../styles/EditModal.css';
 
 const defaultForm = {
   name: '',
+  artifactCode: '',
   description: '',
   scientificName: '',
   subjectId: '',
@@ -41,11 +42,20 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     artifactTypes: false
   });
 
-  // Load initial data when modal opens or initialData changes
+  // Load initial data and fetch cascade data when modal opens
   useEffect(() => {
     if (open && initialData) {
+      console.log('🔍 Loading Initial Data:', {
+        initialData,
+        subjectId: initialData.subjectId,
+        chapterId: initialData.chapterId,
+        topicId: initialData.topicId,
+        artifactTypeId: initialData.artifactTypeId
+      });
+      
       setForm({
         name: initialData.artifactName || initialData.name || '',
+        artifactCode: initialData.artifactCode || '',
         description: initialData.description || '',
         scientificName: initialData.scientificName || '',
         subjectId: initialData.subjectId || '',
@@ -54,40 +64,76 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
         artifactTypeId: initialData.artifactTypeId || ''
       });
       setIsEditing(false); // Reset to view mode when opening
+      
+      // Load cascade data to display proper names
+      loadCascadeData();
     } else {
       setForm(defaultForm);
       setIsEditing(false);
     }
   }, [open, initialData]);
 
-  // Fetch current user and dropdowns when modal opens
-  useEffect(() => {
-    if (open) {
-      if (!currentUser) {
-        dispatch(fetchCurrentUser());
+  const loadCascadeData = async () => {
+    try {
+      // Always fetch subjects first
+      await fetchSubjects();
+      
+      // If we have topicId, we need to trace back to get chapter and subject
+      if (initialData.topicId) {
+        // We need to find which chapter this topic belongs to
+        // Since we don't have direct API, we'll need to check all subjects and their chapters
+        const subjectsResponse = await getSubjectsAPI();
+        const subjects = subjectsResponse.data || subjectsResponse || [];
+        
+        for (const subject of subjects) {
+          try {
+            const chaptersResponse = await getChaptersAPI({ subjectId: subject.subjectId || subject.subject_id });
+            const chapters = chaptersResponse.data || chaptersResponse || [];
+            
+            for (const chapter of chapters) {
+              const topicsResponse = await getTopicsAPI({ chapterId: chapter.chapterId || chapter.chapter_id });
+              const topics = topicsResponse.data || topicsResponse || [];
+              
+              const foundTopic = topics.find(t => 
+                String(t.topicId || t.topic_id) === String(initialData.topicId)
+              );
+              
+              if (foundTopic) {
+                // Found the topic! Update form with subject and chapter IDs
+                setForm(prev => ({
+                  ...prev,
+                  subjectId: subject.subjectId || subject.subject_id,
+                  chapterId: chapter.chapterId || chapter.chapter_id
+                }));
+                
+                // Load the chapters and topics for display
+                setDropdownData(prev => ({
+                  ...prev,
+                  chapters: chapters,
+                  topics: topics
+                }));
+                
+                // Also fetch artifact types for this topic
+                await fetchArtifactTypesByTopic(initialData.topicId);
+                return; // Stop searching once found
+              }
+            }
+          } catch (error) {
+            console.log('Error checking subject:', subject, error);
+          }
+        }
       }
-      fetchSubjects();
+    } catch (error) {
+      console.error('Error loading cascade data:', error);
+    }
+  };
+
+  // Fetch current user when modal opens
+  useEffect(() => {
+    if (open && !currentUser) {
+      dispatch(fetchCurrentUser());
     }
   }, [open, currentUser, dispatch]);
-
-  // Auto-fetch cascading dropdowns when form has pre-selected values
-  useEffect(() => {
-    if (open && initialData && form.subjectId) {
-      fetchChaptersBySubject(form.subjectId);
-    }
-  }, [open, initialData, form.subjectId]);
-
-  useEffect(() => {
-    if (open && initialData && form.chapterId && form.subjectId) {
-      fetchTopicsByChapter(form.chapterId);
-    }
-  }, [open, initialData, form.chapterId]);
-
-  useEffect(() => {
-    if (open && initialData && form.topicId && form.chapterId) {
-      fetchArtifactTypesByTopic(form.topicId);
-    }
-  }, [open, initialData, form.topicId]);
 
   const fetchSubjects = async () => {
     try {
@@ -108,7 +154,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchChaptersBySubject = async (subjectId) => {
     try {
       setLoadingStates(prev => ({ ...prev, chapters: true }));
-      const response = await getChaptersBySubjectAPI(subjectId);
+      const response = await getChaptersAPI({ subjectId });
       setDropdownData(prev => ({
         ...prev,
         chapters: response.data || response || []
@@ -124,7 +170,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchTopicsByChapter = async (chapterId) => {
     try {
       setLoadingStates(prev => ({ ...prev, topics: true }));
-      const response = await getTopicsByChapterAPI(chapterId);
+      const response = await getTopicsAPI({ chapterId });
       setDropdownData(prev => ({
         ...prev,
         topics: response.data || response || []
@@ -140,7 +186,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   const fetchArtifactTypesByTopic = async (topicId) => {
     try {
       setLoadingStates(prev => ({ ...prev, artifactTypes: true }));
-      const response = await getArtifactTypesByTopicAPI(topicId);
+      const response = await getArtifactTypesAPI({ topicId });
       setDropdownData(prev => ({
         ...prev,
         artifactTypes: response.data || response || []
@@ -207,7 +253,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   };
 
   const handleSubmit = () => {
-    if (form.name.trim() && form.description.trim() && form.scientificName.trim() && form.artifactTypeId && currentUser && initialData && isEditing) {
+    if (form.name.trim() && form.artifactCode.trim() && form.description.trim() && form.scientificName.trim() && form.artifactTypeId && currentUser && initialData && isEditing) {
       const updateData = {
         ...form,
         artifactTypeId: parseInt(form.artifactTypeId),
@@ -234,32 +280,48 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
   // Get display names for view mode
   const getSubjectName = () => {
     if (!form.subjectId || !dropdownData.subjects.length) return 'Không có thông tin';
+    
     const subject = dropdownData.subjects.find(s => 
-      (s.subjectId || s.subject_id) == form.subjectId
+      String(s.subjectId || s.subject_id || s.id) === String(form.subjectId)
     );
+    
     return subject ? subject.name : 'Không tìm thấy môn học';
   };
 
   const getChapterName = () => {
     if (!form.chapterId || !dropdownData.chapters.length) return 'Không có thông tin';
+    
     const chapter = dropdownData.chapters.find(ch => 
-      (ch.chapterId || ch.chapter_id) == form.chapterId
+      String(ch.chapterId || ch.chapter_id || ch.id) === String(form.chapterId)
     );
+    
     return chapter ? chapter.name : 'Không tìm thấy chương';
   };
 
   const getTopicName = () => {
+    // Use topicName directly from initialData if available
+    if (initialData && initialData.topicName) {
+      return initialData.topicName;
+    }
+    
+    // Fallback to dropdown search
     if (!form.topicId || !dropdownData.topics.length) return 'Không có thông tin';
     const topic = dropdownData.topics.find(t => 
-      (t.topicId || t.topic_id) == form.topicId
+      String(t.topicId || t.topic_id || t.id) === String(form.topicId)
     );
     return topic ? topic.name : 'Không tìm thấy chủ đề';
   };
 
   const getArtifactTypeName = () => {
+    // Use artifactTypeName directly from initialData if available
+    if (initialData && initialData.artifactTypeName) {
+      return initialData.artifactTypeName;
+    }
+    
+    // Fallback to dropdown search
     if (!form.artifactTypeId || !dropdownData.artifactTypes.length) return 'Không có thông tin';
     const artifactType = dropdownData.artifactTypes.find(at => 
-      (at.artifactTypeId || at.artifact_type_id) == form.artifactTypeId
+      String(at.artifactTypeId || at.artifact_type_id || at.id) === String(form.artifactTypeId)
     );
     return artifactType ? artifactType.name : 'Không tìm thấy loại mẫu vật';
   };
@@ -285,6 +347,23 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
               onChange={handleChange}
               placeholder="Nhập tên mẫu vật"
               rows="2"
+              disabled={!isEditing}
+              required
+              style={{
+                backgroundColor: !isEditing ? '#f5f5f5' : 'white',
+                color: !isEditing ? '#666' : 'black'
+              }}
+            />
+          </div>
+
+          <div className="form-group full-width">
+            <label>Mã mẫu vật</label>
+            <input
+              type="text"
+              name="artifactCode"
+              value={form.artifactCode}
+              onChange={handleChange}
+              placeholder="Nhập mã mẫu vật"
               disabled={!isEditing}
               required
               style={{
@@ -518,6 +597,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
                   if (initialData) {
                     setForm({
                       name: initialData.artifactName || initialData.name || '',
+                      artifactCode: initialData.artifactCode || '',
                       description: initialData.description || '',
                       scientificName: initialData.scientificName || '',
                       subjectId: initialData.subjectId || '',
@@ -539,6 +619,7 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
                 disabled={
                   loading || 
                   !form.name.trim() || 
+                  !form.artifactCode.trim() ||
                   !form.description.trim() || 
                   !form.scientificName.trim() || 
                   !form.artifactTypeId ||

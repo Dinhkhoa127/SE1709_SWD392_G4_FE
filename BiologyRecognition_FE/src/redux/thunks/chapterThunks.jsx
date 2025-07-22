@@ -20,19 +20,34 @@ import {
   getChaptersAPI,
   createChapterAPI,
   updateChapterAPI,
-  getChapterByIdAPI,
   deleteChapterAPI
 } from '../services/apiService';
 
-// Thunk để fetch tất cả chapters
-export const fetchChapters = () => {
+// Thunk để fetch tất cả chapters với pagination và search
+export const fetchChapters = (params = {}) => {
   return async (dispatch) => {
     dispatch(fetchChaptersRequest());
     try {
-      const response = await getChaptersAPI();
+      const response = await getChaptersAPI(params);
+      console.log('Chapter API Response:', response.data || response); // Debug log
       dispatch(fetchChaptersSuccess(response.data || response));
     } catch (error) {
+      console.error('Chapter API Error:', error); // Debug log
       dispatch(fetchChaptersFailure(error.response?.data?.message || error.message || 'Failed to fetch chapters'));
+    }
+  };
+};
+
+// Thunk để tìm kiếm chapters theo tên với pagination
+export const searchChaptersByName = (params) => {
+  return async (dispatch) => {
+    dispatch(fetchChaptersRequest());
+    try {
+      const response = await getChaptersAPI(params);
+      dispatch(fetchChaptersSuccess(response.data || response));
+    } catch (error) {
+      // Don't show error message for search failures, just clear results
+      dispatch(fetchChaptersFailure(''));
     }
   };
 };
@@ -79,7 +94,7 @@ export const fetchChapterById = (chapterId) => {
   return async (dispatch) => {
     dispatch(fetchChapterByIdRequest());
     try {
-      const response = await getChapterByIdAPI(chapterId);
+      const response = await getChaptersAPI({ id: chapterId });
       dispatch(fetchChapterByIdSuccess(response.data || response));
     } catch (error) {
       dispatch(fetchChapterByIdFailure(error.response?.data?.message || error.message || 'Failed to fetch chapter'));

@@ -119,7 +119,7 @@ const handleSubmit = async (e) => {
             // Redirect tới Google OAuth với callback về trang login
             // Backend sẽ xử lý và redirect về /login với token trong URL params
             const callbackUrl = encodeURIComponent(window.location.origin + '/login');
-            window.location.href = `${import.meta.env.VITE_BE_API_URL}/authentication/login-google?redirect=${callbackUrl}`;
+            window.location.href = `${import.meta.env.VITE_BE_API_URL}/auth/login-google?redirect=${callbackUrl}`;
         } catch (error) {
             setError('Có lỗi xảy ra khi khởi tạo đăng nhập Google.');
             setIsLoading(false);

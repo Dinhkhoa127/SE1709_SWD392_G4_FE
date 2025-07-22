@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
+import { formatDate } from '../utils/dateUtils';
 import '../styles/EditModal.css';
 
 const defaultForm = {
   name: '',
-  description: ''
+  description: '',
+  createdDate: '',
+  createdBy: ''
 };
 
 const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
@@ -21,7 +24,9 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
     if (open && initialData) {
       setForm({
         name: initialData.name || '',
-        description: initialData.description || ''
+        description: initialData.description || '',
+        createdDate: initialData.CreatedDate || initialData.createdDate || '',
+        createdBy: initialData.CreatedBy || initialData.createdName || initialData.createdBy || ''
       });
       setIsEditing(false); // Reset to view mode when opening
     } else {
@@ -76,29 +81,76 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
           <i className="fas fa-times"></i>
         </button>
         <form className="edit-modal-form" onSubmit={handleSubmit} id="editForm">
-          <div className="form-group full-width">
-            <label>Tên môn học</label>
-            <textarea
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Nhập tên môn học"
-              rows="2"
-              disabled={!isEditing}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group full-width">
+              <label>Tên môn học</label>
+              <textarea
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Nhập tên môn học"
+                rows="2"
+                disabled={!isEditing}
+                required
+              />
+            </div>
           </div>
-          <div className="form-group full-width">
-            <label>Mô tả</label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Nhập mô tả môn học"
-              rows="4"
-              disabled={!isEditing}
-              required
-            />
+          
+          <div className="form-row">
+            <div className="form-group full-width">
+              <label>Mô tả</label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Nhập mô tả môn học"
+                rows="2"
+                disabled={!isEditing}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label>Ngày tạo</label>
+              <input
+                type="text"
+                value={form.createdDate ? formatDate(form.createdDate) : ''}
+                disabled
+                className="disabled-input"
+              />
+            </div>
+            <div className="form-group">
+              <label>Người tạo</label>
+              <input
+                type="text"
+                value={form.createdBy}
+                disabled
+                className="disabled-input"
+              />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label>Ngày sửa cuối</label>
+              <input
+                type="text"
+                value={initialData?.ModifiedDate || initialData?.modifiedDate ? formatDate(initialData.ModifiedDate || initialData.modifiedDate) : 'N/A'}
+                disabled
+                className="disabled-input"
+              />
+            </div>
+            <div className="form-group">
+              <label>Người sửa cuối</label>
+              <input
+                type="text"
+                value={initialData?.ModifiedBy || initialData?.modifiedName || 'N/A'}
+                disabled
+                className="disabled-input"
+              />
+            </div>
           </div>
         </form>
         <div className="action-buttons">
@@ -131,7 +183,9 @@ const EditModal = ({ open, onClose, onSubmit, initialData, loading }) => {
                   if (initialData) {
                     setForm({
                       name: initialData.name || '',
-                      description: initialData.description || ''
+                      description: initialData.description || '',
+                      createdDate: initialData.CreatedDate || initialData.createdDate || '',
+                      createdBy: initialData.CreatedBy || initialData.createdName || initialData.createdBy || ''
                     });
                   }
                   setIsEditing(false);

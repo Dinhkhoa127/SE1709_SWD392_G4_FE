@@ -11,10 +11,13 @@ const defaultForm = {
   artifactIds: []
 };
 
-const EditModalArticle = ({ open, onClose, onSubmit, initialData, loading }) => {
+const EditModalArticle = ({ open, onClose, onSubmit, initialData, loading, artifacts: artifactsProp }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector(state => state.user);
-  const { artifacts = [] } = useSelector((state) => state.artifacts || {});
+  const { artifacts: artifactsRedux = [] } = useSelector((state) => state.artifacts || {});
+  
+  // Use props artifacts if available, otherwise use Redux artifacts
+  const artifacts = artifactsProp && artifactsProp.length > 0 ? artifactsProp : artifactsRedux;
   
   const [form, setForm] = useState(defaultForm);
   const [isEditing, setIsEditing] = useState(false);
@@ -23,19 +26,32 @@ const EditModalArticle = ({ open, onClose, onSubmit, initialData, loading }) => 
   // Load initial data when modal opens or initialData changes
   useEffect(() => {
     if (open && initialData) {
+      // Try different possible field names for artifactIds
+      const artifactIds = initialData.artifactIds || 
+                         initialData.artifact_ids || 
+                         initialData.ArtifactIds || 
+                         initialData.artifacts || 
+                         [];
+      
       setForm({
         title: initialData.title || '',
         content: initialData.content || '',
-        artifactIds: initialData.artifactIds || []
+        artifactIds: artifactIds
       });
       
+      console.log('Initial data:', initialData);
+      console.log('Available artifacts:', artifacts);
+      console.log('Artifact IDs to match:', artifactIds);
+      
       // Set selected artifacts based on artifactIds
-      if (initialData.artifactIds && Array.isArray(initialData.artifactIds)) {
+      if (artifactIds && Array.isArray(artifactIds) && artifacts.length > 0) {
         const selectedArts = artifacts.filter(art => 
-          initialData.artifactIds.includes(art.artifactId)
+          artifactIds.includes(art.artifactId)
         );
+        console.log('Selected artifacts found:', selectedArts);
         setSelectedArtifacts(selectedArts);
       } else {
+        console.log('No artifact IDs found or no artifacts available');
         setSelectedArtifacts([]);
       }
       
@@ -53,7 +69,12 @@ const EditModalArticle = ({ open, onClose, onSubmit, initialData, loading }) => 
       if (!currentUser) {
         dispatch(fetchCurrentUser());
       }
-      dispatch(fetchArtifactsThunk());
+      // Fetch artifacts with high page size and details
+      dispatch(fetchArtifactsThunk({ 
+        page: 1, 
+        pageSize: 1000,
+        includeDetails: true 
+      }));
     }
   }, [open, currentUser, dispatch]);
 
@@ -362,16 +383,22 @@ const EditModalArticle = ({ open, onClose, onSubmit, initialData, loading }) => 
                 onClick={() => {
                   // Reset form to initial data when canceling
                   if (initialData) {
+                    const artifactIds = initialData.artifactIds || 
+                                       initialData.artifact_ids || 
+                                       initialData.ArtifactIds || 
+                                       initialData.artifacts || 
+                                       [];
+                    
                     setForm({
                       title: initialData.title || '',
                       content: initialData.content || '',
-                      artifactIds: initialData.artifactIds || []
+                      artifactIds: artifactIds
                     });
                     
                     // Reset selected artifacts
-                    if (initialData.artifactIds && Array.isArray(initialData.artifactIds)) {
+                    if (artifactIds && Array.isArray(artifactIds) && artifacts.length > 0) {
                       const selectedArts = artifacts.filter(art => 
-                        initialData.artifactIds.includes(art.artifactId)
+                        artifactIds.includes(art.artifactId)
                       );
                       setSelectedArtifacts(selectedArts);
                     } else {

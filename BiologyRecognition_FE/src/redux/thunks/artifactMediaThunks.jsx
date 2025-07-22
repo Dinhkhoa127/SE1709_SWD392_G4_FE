@@ -18,21 +18,34 @@ import {
 
 import {
   getArtifactMediaAPI,
-  getArtifactMediaByIdAPI,
+
   createArtifactMediaAPI,
   updateArtifactMediaAPI,
   deleteArtifactMediaAPI
 } from '../services/apiService';
 
-// Thunk để fetch tất cả artifact media
-export const fetchArtifactMedia = () => {
+// Thunk để fetch tất cả artifact media với parameters
+export const fetchArtifactMedia = (params = {}) => {
   return async (dispatch) => {
     dispatch(fetchArtifactMediaRequest());
     try {
-      const response = await getArtifactMediaAPI();
+      const response = await getArtifactMediaAPI(params);
       dispatch(fetchArtifactMediaSuccess(response.data || response));
     } catch (error) {
-      dispatch(fetchArtifactMediaFailure(error.response?.data?.message || error.message || 'Failed to fetch artifact media'));
+      dispatch(fetchArtifactMediaFailure(''));
+    }
+  };
+};
+
+// Thunk để search artifact media với parameters
+export const searchArtifactMedia = (params = {}) => {
+  return async (dispatch) => {
+    dispatch(fetchArtifactMediaRequest());
+    try {
+      const response = await getArtifactMediaAPI(params);
+      dispatch(fetchArtifactMediaSuccess(response.data || response));
+    } catch (error) {
+      dispatch(fetchArtifactMediaFailure(''));
     }
   };
 };
@@ -42,10 +55,11 @@ export const fetchArtifactMediaById = (artifactMediaId) => {
   return async (dispatch) => {
     dispatch(fetchArtifactMediaByIdRequest());
     try {
-      const response = await getArtifactMediaByIdAPI(artifactMediaId);
-      dispatch(fetchArtifactMediaByIdSuccess(response.data || response));
+      const response = await getArtifactMediaAPI({ artifactMediaId });
+      const mediaData = Array.isArray(response.data) ? response.data[0] : response.data || response;
+      dispatch(fetchArtifactMediaByIdSuccess(mediaData));
     } catch (error) {
-      dispatch(fetchArtifactMediaByIdFailure(error.response?.data?.message || error.message || 'Failed to fetch artifact media'));
+      dispatch(fetchArtifactMediaByIdFailure(''));
     }
   };
 };
@@ -60,7 +74,7 @@ export const createArtifactMedia = (artifactMediaData) => {
       dispatch(fetchArtifactMedia()); // Refresh the list
       return Promise.resolve();
     } catch (error) {
-      dispatch(createArtifactMediaFailure(error.response?.data?.message || error.message || 'Failed to create artifact media'));
+      dispatch(createArtifactMediaFailure(''));
       return Promise.reject(error);
     }
   };
@@ -76,7 +90,7 @@ export const updateArtifactMedia = (artifactMediaData) => {
       dispatch(fetchArtifactMedia()); // Refresh the list
       return Promise.resolve();
     } catch (error) {
-      dispatch(updateArtifactMediaFailure(error.response?.data?.message || error.message || 'Failed to update artifact media'));
+      dispatch(updateArtifactMediaFailure(''));
       return Promise.reject(error);
     }
   };
@@ -91,7 +105,7 @@ export const deleteArtifactMedia = (artifactMediaId) => {
       dispatch(deleteArtifactMediaSuccess(artifactMediaId));
       return Promise.resolve();
     } catch (error) {
-      dispatch(deleteArtifactMediaFailure(error.response?.data?.message || error.message || 'Failed to delete artifact media'));
+      dispatch(deleteArtifactMediaFailure(''));
       return Promise.reject(error);
     }
   };

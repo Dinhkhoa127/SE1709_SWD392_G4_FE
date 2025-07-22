@@ -48,7 +48,8 @@ const topicReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        error: action.payload
+        error: action.payload,
+        topics: [] // Clear topics when search fails
       };
     
     case FETCH_TOPIC_BY_ID_REQUEST:
