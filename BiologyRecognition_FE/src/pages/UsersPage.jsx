@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { fetchUsersThunk, deleteUserThunk } from '../redux/thunks/userThunks';
+import { fetchUsersThunk, deleteUserThunk, updateUserThunk } from '../redux/thunks/userThunks';
 import { clearUserError } from '../redux/actions/userActions';
 import { formatDate } from '../utils/dateUtils';
 import ViewDetailUser from '../components/ViewDetailUser';
 import CreateModalUser from '../components/CreateModalUser';
+import EditModalUser from '../components/EditModalUser';
 import '../styles/UsersPage.css';
 
 const UsersPage = () => {
   const dispatch = useDispatch();
-  const { users = [], loadingUsers, usersError, deleting, creating } = useSelector((state) => state.user || {});
+  const { users = [], loadingUsers, usersError, deleting, creating, updating } = useSelector((state) => state.user || {});
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -22,6 +23,8 @@ const UsersPage = () => {
   const [selectedUserInfo, setSelectedUserInfo] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editUserInfo, setEditUserInfo] = useState(null);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   // Debounce search term
@@ -83,6 +86,18 @@ const UsersPage = () => {
     inactive: (Array.isArray(users) ? users : []).filter(u => u?.isActive === false).length
   };
 
+  // Helper function to get role name
+  const getRoleName = (roleId) => {
+    switch (roleId) {
+      case 1:
+        return 'Admin';
+      case 3:
+        return 'Lecturer';
+      default:
+        return 'Unknown';
+    }
+  };
+
   // Helper functions
   const handleViewUser = (userId) => {
     console.log('Opening user detail modal for user ID:', userId); // Debug log
@@ -109,6 +124,25 @@ const UsersPage = () => {
   const handleCloseCreateModal = () => {
     setShowCreateModal(false);
     // Refresh danh sách sau khi đóng modal để đảm bảo hiển thị user mới
+    setTimeout(() => {
+      handleRefresh();
+    }, 500);
+  };
+
+  const handleEditUser = (userId) => {
+    console.log('Opening edit modal for user ID:', userId); // Debug log
+    // Find user in current users array
+    const userInfo = users.find(user => (user.userAccountId || user.id) === userId);
+    console.log('Found user info for edit:', userInfo); // Debug log
+    
+    setEditUserInfo(userInfo);
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditUserInfo(null);
+    // Refresh danh sách sau khi đóng modal để đảm bảo hiển thị thay đổi
     setTimeout(() => {
       handleRefresh();
     }, 500);
@@ -292,6 +326,7 @@ const UsersPage = () => {
                       <th>Tên đầy đủ</th>
                       <th>Email</th>
                       <th>Số điện thoại</th>
+                      <th>Vai trò</th>
                       <th>Ngày tạo</th>
                       <th>Ngày chỉnh sửa</th>
                       <th>Trạng thái tài khoản</th>
@@ -319,6 +354,14 @@ const UsersPage = () => {
                           <div className="contact-cell">
                             <i className="fas fa-phone contact-icon"></i>
                             <span>{user.phone || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="role-cell">
+                            <i className={`fas ${user.roleId === 1 ? 'fa-user-shield' : 'fa-user-graduate'} role-icon`}></i>
+                            <span className={`role-badge ${user.roleId === 1 ? 'admin' : 'lecture'}`}>
+                              {getRoleName(user.roleId)}
+                            </span>
                           </div>
                         </td>
                         <td>
@@ -351,8 +394,10 @@ const UsersPage = () => {
                             <button
                               className="action-btn edit"
                               title="Chỉnh sửa"
+                              onClick={() => handleEditUser(user.userAccountId || user.id)}
+                              disabled={updating}
                             >
-                              <i className="fas fa-edit"></i>
+                              <i className={`fas ${updating ? 'fa-spinner fa-spin' : 'fa-edit'}`}></i>
                             </button>
                             <button
                               className="action-btn delete"
@@ -451,6 +496,15 @@ const UsersPage = () => {
           <CreateModalUser
             open={showCreateModal}
             onClose={handleCloseCreateModal}
+          />
+        )}
+
+        {/* Edit User Modal */}
+        {showEditModal && editUserInfo && (
+          <EditModalUser
+            open={showEditModal}
+            onClose={handleCloseEditModal}
+            userInfo={editUserInfo}
           />
         )}
       </div>

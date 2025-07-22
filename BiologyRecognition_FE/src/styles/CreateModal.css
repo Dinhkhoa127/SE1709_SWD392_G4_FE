@@ -669,3 +669,23 @@
 .create-modal-note strong {
   color: #0c4a6e;
 }
+
+/* Checkbox styles */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-label i {
+  color: #4caf50;
+  font-size: 1rem;
+}

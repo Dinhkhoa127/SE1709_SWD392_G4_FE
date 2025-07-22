@@ -1,25 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { createUserThunk } from '../redux/thunks/userThunks';
+import { updateUserThunk } from '../redux/thunks/userThunks';
 import '../styles/CreateModal.css';
 
-const CreateModalUser = ({ open, onClose }) => {
+const EditModalUser = ({ open, onClose, userInfo }) => {
     const dispatch = useDispatch();
-    const { creating } = useSelector(state => state.user);
+    const { updating } = useSelector(state => state.user);
     
     const [form, setForm] = useState({
         fullName: '',
         email: '',
         phone: '',
-        roleId: 1 // Default to Admin role
+        roleId: 1, // Default to Admin role
+        isActive: true,
+        password: ''
     });
 
     const [errors, setErrors] = useState({});
 
+    // Populate form with user data when modal opens
+    useEffect(() => {
+        if (userInfo && open) {
+            console.log('EditModalUser - userInfo received:', userInfo); // Debug log
+            setForm({
+                fullName: userInfo.fullName || '',
+                email: userInfo.email || '',
+                phone: userInfo.phone || '',
+                roleId: userInfo.roleId !== undefined ? userInfo.roleId : 1, // Default to Admin if not specified
+                isActive: userInfo.isActive !== undefined ? userInfo.isActive : true,
+                password: '' 
+            });
+        }
+    }, [userInfo, open]);
+
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
+        const { name, value, type, checked } = e.target;
+        const fieldValue = type === 'checkbox' ? checked : value;
+        
+        setForm({ ...form, [name]: fieldValue });
         
         // Clear error when user starts typing
         if (errors[name]) {
@@ -58,7 +77,7 @@ const CreateModalUser = ({ open, onClose }) => {
         }
 
         // Validate roleId
-        if (form.roleId === '' || form.roleId < 0) {
+        if (form.roleId === '' || form.roleId === null || form.roleId === undefined) {
             newErrors.roleId = 'Vui lòng chọn vai trò';
         } else {
             const roleIdNum = parseInt(form.roleId);
@@ -78,25 +97,57 @@ const CreateModalUser = ({ open, onClose }) => {
             return;
         }
 
+        if (!userInfo || !userInfo.userAccountId) {
+            toast.error('Không thể xác định người dùng cần cập nhật');
+            return;
+        }
+
         try {
-            const userData = {
+            const updateData = {
+                userAccountId: userInfo.userAccountId,
+                password: form.password || "string", // Gửi password nếu có, nếu không thì gửi "string" như API spec
                 fullName: form.fullName.trim(),
                 email: form.email.trim().toLowerCase(),
                 phone: form.phone.trim().replace(/\s+/g, ''),
-                roleId: parseInt(form.roleId)
+                roleId: parseInt(form.roleId),
+                isActive: form.isActive
             };
 
-            console.log('Creating user with data:', userData); // Debug log
-            await dispatch(createUserThunk(userData));
-            toast.success('Tạo tài khoản thành công!');
+            console.log('Updating user with data:', updateData); // Debug log
+            console.log('User info:', userInfo); // Debug log
+            
+            await dispatch(updateUserThunk({ 
+                userId: userInfo.userAccountId, 
+                data: updateData 
+            }));
+            toast.success('Cập nhật tài khoản thành công!');
             handleClose();
         } catch (error) {
-            console.error('Error creating user:', error); // Debug log
+            console.error('Error updating user:', error); // Debug log
+            console.error('Error response:', error.response); // Debug log
             
-            // Kiểm tra nếu có response data thành công nhưng status lỗi
+            // Xử lý lỗi 400 - Bad Request
+            if (error.response?.status === 400) {
+                const errorData = error.response.data;
+                console.error('400 Error details:', errorData); // Debug log
+                
+                let errorMessage = 'Dữ liệu không hợp lệ. ';
+                if (errorData?.message) {
+                    errorMessage += errorData.message;
+                } else if (errorData?.errors) {
+                    // Xử lý validation errors từ server
+                    const errorFields = Object.keys(errorData.errors);
+                    errorMessage += errorFields.map(field => errorData.errors[field]).join(', ');
+                } else {
+                    errorMessage += 'Vui lòng kiểm tra lại thông tin đã nhập.';
+                }
+                toast.error(errorMessage);
+                return;
+            }
+            
+            // Xử lý lỗi 500 tương tự như create
             if (error.response?.status === 500) {
-                // Có thể user đã được tạo thành công, hiển thị thông báo khác
-                toast.warning('Tài khoản có thể đã được tạo thành công. Vui lòng kiểm tra danh sách người dùng.');
+                toast.warning('Tài khoản có thể đã được cập nhật thành công. Vui lòng kiểm tra danh sách người dùng.');
                 handleClose();
                 return;
             }
@@ -104,7 +155,7 @@ const CreateModalUser = ({ open, onClose }) => {
             const errorMessage = error.response?.data?.message || 
                                 error.response?.data?.error || 
                                 error.message || 
-                                'Có lỗi xảy ra khi tạo tài khoản';
+                                'Có lỗi xảy ra khi cập nhật tài khoản';
             toast.error(errorMessage);
         }
     };
@@ -114,7 +165,9 @@ const CreateModalUser = ({ open, onClose }) => {
             fullName: '',
             email: '',
             phone: '',
-            roleId: 1 // Default to Admin
+            roleId: 1, // Default to Admin
+            isActive: true,
+            password: ''
         });
         setErrors({});
         onClose();
@@ -126,8 +179,8 @@ const CreateModalUser = ({ open, onClose }) => {
         <div className="create-modal-overlay">
             <div className="create-modal-content create-modal">
                 <div className="create-modal-title">
-                    <i className="fas fa-user-plus"></i>
-                    Tạo tài khoản mới
+                    <i className="fas fa-user-edit"></i>
+                    Chỉnh sửa tài khoản
                 </div>
                 <button className="close-btn" onClick={handleClose} aria-label="Đóng">
                     <i className="fas fa-times"></i>
@@ -195,9 +248,48 @@ const CreateModalUser = ({ open, onClose }) => {
                         >
                             <option value="">Chọn vai trò</option>
                             <option value="1">Admin</option>
-                            <option value="3">Lecture</option>
+                            <option value="3">Lecturer</option>
                         </select>
                         {errors.roleId && <span className="error-message">{errors.roleId}</span>}
+                    </div>
+
+                    <div className="form-group full-width">
+                        <label>
+                            <i className="fas fa-lock"></i>
+                            Mật khẩu mới (để trống nếu không thay đổi)
+                        </label>
+                        <input 
+                            type="password"
+                            name="password" 
+                            value={form.password} 
+                            onChange={handleChange}
+                            placeholder="Nhập mật khẩu mới (tùy chọn)"
+                        />
+                    </div>
+
+                    <div className="form-group full-width">
+                        <label className="checkbox-label">
+                            <input 
+                                type="checkbox"
+                                name="isActive"
+                                checked={form.isActive}
+                                onChange={handleChange}
+                            />
+                            <span className="checkmark"></span>
+                            <i className="fas fa-toggle-on"></i>
+                            Tài khoản hoạt động
+                        </label>
+                    </div>
+
+                    <div className="create-modal-note" style={{ marginBottom: '16px' }}>
+                        <i className="fas fa-info-circle"></i>
+                        <p>
+                            <strong>Thông tin debug:</strong><br/>
+                            User ID: {userInfo?.userAccountId || 'N/A'}<br/>
+                            Role ID hiện tại: {form.roleId} ({form.roleId === 1 ? 'Admin' : form.roleId === 3 ? 'Lecture' : 'Unknown'})<br/>
+                            Trạng thái: {form.isActive ? 'Hoạt động' : 'Vô hiệu hóa'}<br/>
+                            Password: {form.password ? 'Có thay đổi' : 'Không thay đổi'}
+                        </p>
                     </div>
 
                     <div className="form-actions">
@@ -205,7 +297,7 @@ const CreateModalUser = ({ open, onClose }) => {
                             type="button" 
                             className="btn-cancel" 
                             onClick={handleClose}
-                            disabled={creating}
+                            disabled={updating}
                         >
                             <i className="fas fa-times"></i>
                             Hủy
@@ -213,17 +305,17 @@ const CreateModalUser = ({ open, onClose }) => {
                         <button 
                             type="submit" 
                             className="btn-create" 
-                            disabled={creating}
+                            disabled={updating}
                         >
-                            {creating ? (
+                            {updating ? (
                                 <>
                                     <i className="fas fa-spinner fa-spin"></i>
-                                    Đang tạo...
+                                    Đang cập nhật...
                                 </>
                             ) : (
                                 <>
-                                    <i className="fas fa-plus"></i>
-                                    Tạo tài khoản
+                                    <i className="fas fa-save"></i>
+                                    Cập nhật
                                 </>
                             )}
                         </button>
@@ -233,8 +325,8 @@ const CreateModalUser = ({ open, onClose }) => {
                 <div className="create-modal-note">
                     <i className="fas fa-info-circle"></i>
                     <p>
-                        <strong>Lưu ý:</strong> Mật khẩu mặc định sẽ được gửi qua email đã đăng ký. 
-                        Người dùng có thể thay đổi mật khẩu sau khi đăng nhập lần đầu.
+                        <strong>Lưu ý:</strong> Thông tin cập nhật sẽ có hiệu lực ngay lập tức. 
+                        Nếu thay đổi trạng thái tài khoản, người dùng có thể bị ảnh hưởng quyền truy cập.
                     </p>
                 </div>
             </div>
@@ -242,4 +334,4 @@ const CreateModalUser = ({ open, onClose }) => {
     );
 };
 
-export default CreateModalUser;
+export default EditModalUser;

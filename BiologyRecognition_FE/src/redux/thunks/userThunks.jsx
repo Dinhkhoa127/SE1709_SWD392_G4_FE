@@ -144,13 +144,24 @@ export const updateUserThunk = ({ userId, data }) => {
     dispatch(updateUserRequest());
     
     try {
+      // Gửi data đúng format theo API spec
       const updateData = {
-        ...data,
-        userAccountId: userId
+        userAccountId: userId,
+        password: data.password || "string", // API yêu cầu password field
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        roleId: data.roleId,
+        isActive: data.isActive
       };
+      
+      console.log('Update user thunk - userId:', userId); // Debug log
+      console.log('Update user thunk - data:', updateData); // Debug log
       
       const response = await updateUserAPI(updateData);
       const updatedUser = response.data || response;
+      
+      console.log('Update user response:', updatedUser); // Debug log
       
       dispatch(updateUserSuccess(updatedUser));
       
@@ -159,7 +170,22 @@ export const updateUserThunk = ({ userId, data }) => {
       
       return updatedUser;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi cập nhật người dùng';
+      console.error('Update user thunk error:', error); // Debug log
+      console.error('Update user thunk error response:', error.response); // Debug log
+      
+      // Nếu lỗi 500 nhưng có thể user đã được cập nhật, vẫn refresh danh sách
+      if (error.response?.status === 500) {
+        console.log('Server error 500, refreshing user list to check if user was updated');
+        // Refresh để kiểm tra xem user có được cập nhật không
+        setTimeout(() => {
+          dispatch(fetchUsersThunk());
+        }, 1000);
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Lỗi khi cập nhật người dùng';
       dispatch(updateUserFailure(errorMessage));
       throw error;
     }

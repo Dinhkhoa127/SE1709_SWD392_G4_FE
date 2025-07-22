@@ -204,8 +204,16 @@ const createUserAPI = async (userData) => {
 }
 
 const updateUserAPI = async (userData) => {
-    const URL_API = "/user";
-    return instance.put(URL_API, userData);
+    const URL_API = "/user-accounts/admin";
+    console.log('Sending update user request:', userData); // Debug log
+    try {
+        const response = await instance.put(URL_API, userData);
+        console.log('Update user API response:', response); // Debug log
+        return response;
+    } catch (error) {
+        console.error('Update user API error:', error); // Debug log
+        throw error;
+    }
 }
 
 const deleteUserAPI = async (userId) => {
