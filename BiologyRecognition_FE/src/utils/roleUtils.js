@@ -20,6 +20,9 @@ export const navigateByRole = (roleId, navigate) => {
             navigate('/admin', { replace: true });
             break;
         default:
+            // Các role khác hoặc chưa được cấp quyền -> chuyển đến trang chờ
+            console.log('Navigating to waiting permission page for role:', roleId);
+            navigate('/waiting-permission', { replace: true });
             break;
     }
 };
@@ -36,7 +39,7 @@ export const getDefaultRouteByRole = (roleId) => {
         case 3:
             return '/admin';
         default:
-            return null;
+            return '/waiting-permission';
     }
 };
 
@@ -49,6 +52,12 @@ export const getDefaultRouteByRole = (roleId) => {
 export const hasRoutePermission = (roleId, route) => {
     const adminRoutes = ['/admin', '/subjects', '/topics', '/chapters', '/artifacts', '/artifact-types', '/artifact-medias', '/articles', '/settings'];
     const userRoutes = ['/users'];
+    const publicRoutes = ['/waiting-permission', '/profile']; // Thêm các route công khai
+    
+    // Kiểm tra route công khai trước
+    if (publicRoutes.includes(route)) {
+        return true;
+    }
     
     switch (roleId) {
         case 1:
@@ -58,8 +67,8 @@ export const hasRoutePermission = (roleId, route) => {
             // Admin có thể truy cập tất cả
             return true;
         default:
-            // Các role khác mặc định có quyền admin
-            return true;
+            // Các role khác chỉ có thể truy cập trang chờ cấp quyền
+            return publicRoutes.includes(route);
     }
 };
 
@@ -75,6 +84,15 @@ export const getRoleDisplayName = (roleId) => {
         case 3:
             return 'Quản trị viên';
         default:
-            return 'Không xác định';
+            return 'Chờ cấp quyền';
     }
+};
+
+/**
+ * Check if user needs permission approval
+ * @param {number} roleId - User's role ID
+ * @returns {boolean} - Needs approval or not
+ */
+export const needsPermissionApproval = (roleId) => {
+    return roleId !== 1 && roleId !== 3;
 };

@@ -61,13 +61,18 @@ instance.interceptors.response.use(
     
     // Xử lý lỗi 401 (Unauthorized) - Token hết hạn hoặc không hợp lệ
     if (error.response?.status === 401) {
-      // Clear localStorage và redirect về login
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('accessToken'); // Sửa từ 'token' thành 'accessToken'
+      // Chỉ redirect về login nếu không phải là request update profile
+      const isUpdateProfile = error.config?.url?.includes('/user-accounts/me/info');
       
-      // Chỉ redirect nếu không phải ở trang login
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (!isUpdateProfile) {
+        // Clear localStorage và redirect về login
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('accessToken'); // Sửa từ 'token' thành 'accessToken'
+        
+        // Chỉ redirect nếu không phải ở trang login
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     

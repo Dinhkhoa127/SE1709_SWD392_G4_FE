@@ -19,7 +19,10 @@ import {
   DELETE_USER_SUCCESS,
   DELETE_USER_FAILURE,
   SET_SELECTED_USER,
-  CLEAR_USER_ERROR
+  CLEAR_USER_ERROR,
+  UPDATE_MY_INFO_REQUEST,
+  UPDATE_MY_INFO_SUCCESS,
+  UPDATE_MY_INFO_FAILURE
 } from '../actions/userActions';
 
 const initialState = {
@@ -206,6 +209,29 @@ const userReducer = (state = initialState, action) => {
         ...state,
         error: null,
         usersError: null
+      };
+
+    // Update My Info Cases
+    case UPDATE_MY_INFO_REQUEST:
+      return {
+        ...state,
+        updating: true,
+        error: null
+      };
+      
+    case UPDATE_MY_INFO_SUCCESS:
+      return {
+        ...state,
+        updating: false,
+        currentUser: action.payload,
+        error: null
+      };
+      
+    case UPDATE_MY_INFO_FAILURE:
+      return {
+        ...state,
+        updating: false,
+        error: action.payload
       };
     
     default:

@@ -15,6 +15,7 @@ import RecognitionsPage from "./pages/RecognitionsPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import WaitingPermissionPage from "./pages/WaitingPermissionPage.jsx";
 import Login from "./pages/Login.jsx";
 import GoogleCallback from "./pages/GoogleCallback.jsx";
 import "./App.css";
@@ -28,6 +29,11 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
+          <Route path="/waiting-permission" element={
+            <ProtectedRoute>
+              <WaitingPermissionPage />
+            </ProtectedRoute>
+          } />
           <Route path="/" element={<Login />} />
           <Route path="/admin" element={
             <ProtectedRoute>

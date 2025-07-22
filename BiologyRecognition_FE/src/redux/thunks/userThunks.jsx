@@ -18,7 +18,10 @@ import {
   deleteUserRequest,
   deleteUserSuccess,
   deleteUserFailure,
-  setSelectedUser
+  setSelectedUser,
+  updateMyInfoRequest,
+  updateMyInfoSuccess,
+  updateMyInfoFailure
 } from '../actions/userActions';
 
 import {
@@ -27,6 +30,7 @@ import {
   getUserByIdAPI,
   createUserAPI,
   updateUserAPI,
+  updateMyInfoAPI,
   deleteUserAPI
 } from '../services/apiService';
 
@@ -208,6 +212,75 @@ export const deleteUserThunk = (userId) => {
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi xóa người dùng';
       dispatch(deleteUserFailure(errorMessage));
+      throw error;
+    }
+  };
+};
+
+// Update my info
+export const updateMyInfoThunk = (data) => {
+  return async (dispatch, getState) => {
+    dispatch(updateMyInfoRequest());
+    
+    try {
+      console.log('Update my info thunk - data:', data); // Debug log
+      
+      // Kiểm tra role của user hiện tại
+      const currentUser = getState().user.currentUser;
+      if (!currentUser) {
+        throw new Error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      }
+      
+      // Nếu là Admin (role 1), sử dụng endpoint admin
+      if (currentUser.role === 1 || currentUser.role === "1") {
+        console.log('Admin user detected, cannot use me/info endpoint');
+        throw new Error('Tài khoản Admin không thể sử dụng chức năng này. Vui lòng liên hệ quản trị viên khác.');
+      }
+      
+      const updateData = {
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone
+      };
+      
+      console.log('Update my info thunk - updateData:', updateData); // Debug log
+      
+      const response = await updateMyInfoAPI(updateData);
+      const updatedUser = response.data || response;
+      
+      console.log('Update my info response:', updatedUser); // Debug log
+      
+      dispatch(updateMyInfoSuccess(updatedUser));
+      
+      // Cập nhật lại currentUser trong localStorage
+      const currentUserData = localStorage.getItem('currentUser');
+      if (currentUserData) {
+        try {
+          const currentUser = JSON.parse(currentUserData);
+          const updatedCurrentUser = {
+            ...currentUser,
+            fullName: updateData.fullName,
+            email: updateData.email,
+            phone: updateData.phone
+          };
+          localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
+          
+          // Dispatch để cập nhật currentUser trong Redux state
+          dispatch(fetchCurrentUserSuccess(updatedCurrentUser));
+        } catch (error) {
+          console.error('Error updating localStorage:', error);
+        }
+      }
+      
+      return { success: true, data: updatedUser };
+    } catch (error) {
+      console.error('Update my info error:', error); // Debug log
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Lỗi khi cập nhật thông tin cá nhân';
+      dispatch(updateMyInfoFailure(errorMessage));
       throw error;
     }
   };

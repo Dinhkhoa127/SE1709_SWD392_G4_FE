@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { restoreUserFromStorage } from '../redux/thunks/userThunks';
-import { hasRoutePermission, navigateByRole } from '../utils/roleUtils';
+import { hasRoutePermission, navigateByRole, needsPermissionApproval } from '../utils/roleUtils';
 
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useSelector(state => state.user);
@@ -39,6 +39,12 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     if (currentUser) {
       const currentPath = location.pathname;
+      
+      // Nếu user cần chờ cấp quyền và không ở trang waiting-permission, chuyển hướng
+      if (needsPermissionApproval(currentUser.roleId) && currentPath !== '/waiting-permission') {
+        navigate('/waiting-permission', { replace: true });
+        return;
+      }
       
       // Kiểm tra quyền truy cập route hiện tại
       if (!hasRoutePermission(currentUser.roleId, currentPath)) {

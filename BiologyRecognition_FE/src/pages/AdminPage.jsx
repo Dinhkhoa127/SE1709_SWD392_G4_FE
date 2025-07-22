@@ -45,12 +45,6 @@ const AdminPage = () => {
 
   return (
     <>
-      {/* Font Awesome CDN */}
-      <link 
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
-        rel="stylesheet" 
-      />
-
       {/* Decorative Leaves */}
       <div className="admin-decorative-leaves">
         <div className="admin-deco-leaf admin-leaf-1">🌿</div>
@@ -141,6 +135,13 @@ const AdminPage = () => {
                     <div>
                       <div className="stat-value">8</div>
                       <div className="stat-label">Lịch sử nhận diện</div>
+                    </div>
+                  </div>
+                  <div className="stat-card" onClick={() => navigate('/users')} style={{ cursor: 'pointer' }}>
+                    <div className="stat-icon pending-users-icon"><i className="fas fa-user-clock"></i></div>
+                    <div>
+                      <div className="stat-value">3</div>
+                      <div className="stat-label">Người dùng chờ cấp quyền</div>
                     </div>
                   </div>
                 </div>
@@ -309,6 +310,24 @@ const AdminPage = () => {
                     <p>Quản lý lịch sử những lần nhận diện trong app nhận diện các mẫu vật sinh học của học sinh.</p>
                     <div className="action-buttons">
                       <button className="btn btn-primary" onClick={() => navigate('/recognitions')}>
+                        <i className="fas fa-arrow-right"></i>
+                        Quản lí
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="content-card">
+                    <div className="card-header">
+                      <div className="card-title">
+                        <div className="card-icon pending-users-icon">
+                          <i className="fas fa-user-shield"></i>
+                        </div>
+                        Quản lí người dùng & cấp quyền
+                      </div>
+                    </div>
+                    <p>Quản lý tài khoản người dùng, phân quyền truy cập và phê duyệt các tài khoản đang chờ cấp quyền.</p>
+                    <div className="action-buttons">
+                      <button className="btn btn-primary" onClick={() => navigate('/users')}>
                         <i className="fas fa-arrow-right"></i>
                         Quản lí
                       </button>

@@ -19,8 +19,31 @@ const loginGoogleAPI = async (redirectUrl = null) => {
 }
 
 const getCurrentUserAPI = async () => {
-    const URL_API = "/auth/current-user";
-    return instance.get(URL_API);
+    // Thử với endpoint auth/current-user trước
+    try {
+        const URL_API = "/auth/current-user";
+        console.log('🔍 Trying getCurrentUserAPI with:', URL_API);
+        return await instance.get(URL_API);
+    } catch (error) {
+        console.error('❌ getCurrentUserAPI failed with /auth/current-user:', error.response?.status);
+        
+        // Nếu không thành công, thử với endpoint khác hoặc lấy từ localStorage
+        if (error.response?.status === 400 || error.response?.status === 404) {
+            console.log('🔄 Fallback: Getting user from localStorage');
+            
+            const currentUserData = localStorage.getItem('currentUser');
+            if (currentUserData) {
+                try {
+                    const user = JSON.parse(currentUserData);
+                    return { data: user };
+                } catch (parseError) {
+                    console.error('Error parsing localStorage user:', parseError);
+                    throw error;
+                }
+            }
+        }
+        throw error;
+    }
 }
 
 // Subject APIs
@@ -216,6 +239,54 @@ const updateUserAPI = async (userData) => {
     }
 }
 
+const updateMyInfoAPI = async (userData) => {
+    const URL_API = "/user-accounts/me/info";
+    console.log('🔄 Sending update my info request:', userData);
+    console.log('🔗 Full URL:', `${import.meta.env.VITE_BE_API_URL}${URL_API}`);
+    
+    // Lấy current user từ localStorage để có UserAccountId
+    const currentUserData = localStorage.getItem('currentUser');
+    let userAccountId = null;
+    
+    if (currentUserData) {
+        try {
+            const currentUser = JSON.parse(currentUserData);
+            userAccountId = currentUser.userAccountId || currentUser.id;
+        } catch (error) {
+            console.error('Error parsing current user data:', error);
+        }
+    }
+    
+    if (!userAccountId) {
+        throw new Error('Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.');
+    }
+    
+    // Thêm UserAccountId vào request body theo yêu cầu của backend
+    const requestData = {
+        userAccountId: userAccountId,
+        fullName: userData.fullName,
+        email: userData.email,
+        phone: userData.phone
+    };
+    
+    console.log('🔄 Final request data with UserAccountId:', requestData);
+    
+    try {
+        const response = await instance.put(URL_API, requestData);
+        console.log('✅ Update my info API response:', response);
+        return response;
+    } catch (error) {
+        console.error('❌ Update my info API error:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message,
+            url: error.config?.url
+        });
+        throw error;
+    }
+}
+
 const deleteUserAPI = async (userId) => {
     const URL_API = `/user/${userId}`;
     return instance.delete(URL_API);
@@ -281,6 +352,7 @@ export {
     getUserByIdAPI,
     createUserAPI,
     updateUserAPI,
+    updateMyInfoAPI,
     deleteUserAPI,
 
     // Recognition APIs

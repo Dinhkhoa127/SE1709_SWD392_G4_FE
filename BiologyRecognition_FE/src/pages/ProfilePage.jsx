@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import { formatDate } from '../utils/dateUtils';
+import EditProfileModal from '../components/EditProfileModal';
 import '../styles/ProfilePage.css';
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const { currentUser, loadingUsers, usersError } = useSelector((state) => state.user || {});
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     // Fetch current user data if not available
@@ -14,6 +16,19 @@ const ProfilePage = () => {
       dispatch(fetchCurrentUser());
     }
   }, [dispatch, currentUser]);
+
+  const handleEditProfile = () => {
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    
+    // Không cần fetch lại vì đã update localStorage và Redux state trong thunk
+    // setTimeout(() => {
+    //   dispatch(fetchCurrentUser());
+    // }, 100);
+  };
 
   if (loadingUsers) {
     return (
@@ -190,7 +205,7 @@ const ProfilePage = () => {
 
             {/* Action Buttons */}
             <div className="profile-actions">
-              <button className="btn btn-primary">
+              <button className="btn btn-primary" onClick={handleEditProfile}>
                 <i className="fas fa-edit"></i>
                 Chỉnh sửa thông tin
               </button>
@@ -201,6 +216,13 @@ const ProfilePage = () => {
             </div>
           </section>
         </main>
+
+        {/* Edit Profile Modal */}
+        <EditProfileModal 
+          show={showEditModal} 
+          onClose={handleCloseEditModal}
+          user={currentUser}
+        />
       </div>
     </>
   );
