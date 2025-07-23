@@ -135,13 +135,28 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     }
   }, [open, currentUser, dispatch]);
 
+  // Fetch all subjects with pagination
   const fetchSubjects = async () => {
     try {
       setLoadingStates(prev => ({ ...prev, subjects: true }));
-      const response = await getSubjectsAPI();
+      let allSubjects = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      do {
+        const response = await getSubjectsAPI({ page, pageSize });
+        const subjects = response.data || response || [];
+        if (Array.isArray(subjects)) {
+          allSubjects = allSubjects.concat(subjects);
+          totalPages = response.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
       setDropdownData(prev => ({
         ...prev,
-        subjects: response.data || response || []
+        subjects: allSubjects
       }));
     } catch (error) {
       toast.error('Lỗi khi tải danh sách môn học');
@@ -151,13 +166,28 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     }
   };
 
+  // Fetch all chapters with pagination by subject
   const fetchChaptersBySubject = async (subjectId) => {
     try {
       setLoadingStates(prev => ({ ...prev, chapters: true }));
-      const response = await getChaptersAPI({ subjectId });
+      let allChapters = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      do {
+        const response = await getChaptersAPI({ subjectId, page, pageSize });
+        const chapters = response.data || response || [];
+        if (Array.isArray(chapters)) {
+          allChapters = allChapters.concat(chapters);
+          totalPages = response.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
       setDropdownData(prev => ({
         ...prev,
-        chapters: response.data || response || []
+        chapters: allChapters
       }));
     } catch (error) {
       toast.error('Lỗi khi tải danh sách chương');
@@ -167,13 +197,28 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     }
   };
 
+  // Fetch all topics with pagination by chapter
   const fetchTopicsByChapter = async (chapterId) => {
     try {
       setLoadingStates(prev => ({ ...prev, topics: true }));
-      const response = await getTopicsAPI({ chapterId });
+      let allTopics = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      do {
+        const response = await getTopicsAPI({ chapterId, page, pageSize });
+        const topics = response.data || response || [];
+        if (Array.isArray(topics)) {
+          allTopics = allTopics.concat(topics);
+          totalPages = response.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
       setDropdownData(prev => ({
         ...prev,
-        topics: response.data || response || []
+        topics: allTopics
       }));
     } catch (error) {
       toast.error('Lỗi khi tải danh sách chủ đề');
@@ -183,13 +228,28 @@ const EditModalArtifact = ({ open, onClose, onSubmit, initialData, loading }) =>
     }
   };
 
+  // Fetch all artifact types with pagination by topic
   const fetchArtifactTypesByTopic = async (topicId) => {
     try {
       setLoadingStates(prev => ({ ...prev, artifactTypes: true }));
-      const response = await getArtifactTypesAPI({ topicId });
+      let allArtifactTypes = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      do {
+        const response = await getArtifactTypesAPI({ topicId, page, pageSize });
+        const artifactTypes = response.data || response || [];
+        if (Array.isArray(artifactTypes)) {
+          allArtifactTypes = allArtifactTypes.concat(artifactTypes);
+          totalPages = response.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
       setDropdownData(prev => ({
         ...prev,
-        artifactTypes: response.data || response || []
+        artifactTypes: allArtifactTypes
       }));
     } catch (error) {
       toast.error('Lỗi khi tải danh sách loại mẫu vật');

@@ -33,7 +33,7 @@ const TopicsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchTimeout, setSearchTimeout] = useState(null);
 
-  // Fetch topics and current user when component mount
+  // Fetch topics, all chapters, and current user when component mount
   useEffect(() => {
     const fetchData = () => {
       if (searchTerm.trim()) {
@@ -49,6 +49,27 @@ const TopicsPage = () => {
     };
 
     fetchData();
+    // Fetch all chapters by looping through all pages
+    const fetchAllChapters = async () => {
+      let allChapters = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      const { getChaptersAPI } = await import('../redux/services/apiService');
+      do {
+        const response = await getChaptersAPI({ page, pageSize });
+        const chapters = response?.data || response || [];
+        if (Array.isArray(chapters)) {
+          allChapters = allChapters.concat(chapters);
+          totalPages = response?.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
+      // Optionally: set allChapters to redux or state if needed
+    };
+    fetchAllChapters();
     dispatch(fetchCurrentUser());
   }, [dispatch, currentPage, pageSize]);
 

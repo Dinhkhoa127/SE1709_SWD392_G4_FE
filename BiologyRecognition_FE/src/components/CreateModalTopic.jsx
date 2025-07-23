@@ -28,13 +28,27 @@ const CreateModalTopic = ({ open, onClose, onSubmit, loading }) => {
         }
     }, [open, currentUser, dispatch]);
 
+    // Fetch all chapters with pagination
     const fetchChapters = async () => {
         try {
             setChaptersLoading(true);
-            const response = await getChaptersAPI();
-            setChapters(response.data || response || []);
+            let allChapters = [];
+            let page = 1;
+            let pageSize = 100;
+            let totalPages = 1;
+            do {
+                const response = await getChaptersAPI({ page, pageSize });
+                const chapters = response?.data || response || [];
+                if (Array.isArray(chapters)) {
+                    allChapters = allChapters.concat(chapters);
+                    totalPages = response?.totalPages || 1;
+                } else {
+                    break;
+                }
+                page++;
+            } while (page <= totalPages);
+            setChapters(allChapters);
         } catch (error) {
-
             toast.error('Không thể tải danh sách chương!');
             setChapters([]);
         } finally {

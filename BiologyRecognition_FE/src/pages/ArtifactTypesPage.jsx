@@ -18,7 +18,7 @@ const ArtifactTypePage = () => {
   const dispatch = useDispatch();
   const { artifactTypes = [], selectedArtifactType: storeSelectedArtifactType, loading, error, createLoading, updateLoading, deleteLoading, fetchArtifactTypeLoading } = useSelector(state => state.artifactTypes || {});
   const { currentUser } = useSelector(state => state.user);
-  const { topics } = useSelector(state => state.topics);
+  const { topics = [], totalPages: topicTotalPages = 1 } = useSelector(state => state.topics || {});
   
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -119,10 +119,30 @@ const ArtifactTypePage = () => {
     setSearchTimeout(newTimeout);
   };
 
-  // Fetch current user and topics once when component mounts
+  // Fetch current user and all topics (all pages) once when component mounts
   useEffect(() => {
     dispatch(fetchCurrentUser());
-    dispatch(fetchTopics());
+    // Fetch all topics by looping through all pages
+    const fetchAllTopics = async () => {
+      let allTopics = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      do {
+        const action = await dispatch(fetchTopics({ page, pageSize }));
+        const data = action?.payload;
+        if (data && Array.isArray(data.topics)) {
+          allTopics = allTopics.concat(data.topics);
+          totalPages = data.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
+      // Optionally: set allTopics to redux if needed
+      // dispatch({ type: 'topics/setAllTopics', payload: allTopics });
+    };
+    fetchAllTopics();
   }, [dispatch]);
 
   // Lưu trạng thái collapsed vào localStorage khi thay đổi

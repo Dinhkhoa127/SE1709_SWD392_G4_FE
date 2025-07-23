@@ -7,7 +7,7 @@ import '../styles/EditModal.css';
 
 const EditModalArtifactType = ({ open, onClose, onSubmit, loading, artifactType }) => {
     const dispatch = useDispatch();
-    const { topics = [] } = useSelector(state => state.topics || {});
+    const { topics = [], totalPages: topicTotalPages = 1 } = useSelector(state => state.topics || {});
     const { currentUser } = useSelector(state => state.user || {});
     
     const [form, setForm] = useState({
@@ -17,10 +17,13 @@ const EditModalArtifactType = ({ open, onClose, onSubmit, loading, artifactType 
         description: ''
     });
     const [isEditing, setIsEditing] = useState(false);
+    // Pagination for topics
+    const [topicPage, setTopicPage] = useState(1);
+    const [topicPageSize, setTopicPageSize] = useState(100);
 
     useEffect(() => {
         if (open) {
-            dispatch(fetchTopics());
+            dispatch(fetchTopics({ page: topicPage, pageSize: topicPageSize }));
             dispatch(fetchCurrentUser());
             if (artifactType) {
                 setForm({
@@ -32,7 +35,7 @@ const EditModalArtifactType = ({ open, onClose, onSubmit, loading, artifactType 
                 setIsEditing(false); // Reset to view mode when opening
             }
         }
-    }, [open, artifactType, dispatch]);
+    }, [open, artifactType, dispatch, topicPage, topicPageSize]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -72,6 +75,8 @@ const EditModalArtifactType = ({ open, onClose, onSubmit, loading, artifactType 
             description: ''
         });
         setIsEditing(false);
+        setTopicPage(1);
+        setTopicPageSize(10);
         onClose();
     };
 
@@ -99,7 +104,7 @@ const EditModalArtifactType = ({ open, onClose, onSubmit, loading, artifactType 
                             <option value="">-- Chọn chủ đề --</option>
                             {(Array.isArray(topics) ? topics : []).map(topic => (
                                 <option key={topic.topicId} value={topic.topicId}>
-                                    {topic.name}
+                                    {topic.name || topic.topicName}
                                 </option>
                             ))}
                         </select>

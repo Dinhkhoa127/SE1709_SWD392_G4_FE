@@ -21,7 +21,7 @@ const ChaptersPage = () => {
 
   const dispatch = useDispatch();
   const { chapters = [], loading, error, createLoading, updateLoading, fetchChapterByIdLoading, selectedChapter, deleteLoading } = useSelector(state => state.chapters || {});
-  const { subjects } = useSelector(state => state.subjects);
+  const { subjects = [], totalPages: subjectTotalPages = 1 } = useSelector(state => state.subjects || {});
   const { currentUser } = useSelector(state => state.user);
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -33,7 +33,7 @@ const ChaptersPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchTimeout, setSearchTimeout] = useState(null);
 
-  // Fetch chapters and current user when component mount
+  // Fetch chapters, all subjects, and current user when component mount
   useEffect(() => {
     const fetchData = () => {
       if (searchTerm.trim()) {
@@ -49,10 +49,29 @@ const ChaptersPage = () => {
     };
 
     fetchData();
-    // Fetch subjects without params (assuming subjects API doesn't have pagination yet)
-    dispatch(fetchSubjects({}));
+    // Fetch all subjects by looping through all pages
+    const fetchAllSubjects = async () => {
+      let allSubjects = [];
+      let page = 1;
+      let pageSize = 100;
+      let totalPages = 1;
+      do {
+        const action = await dispatch(fetchSubjects({ page, pageSize }));
+        const data = action?.payload;
+        if (data && Array.isArray(data.subjects)) {
+          allSubjects = allSubjects.concat(data.subjects);
+          totalPages = data.totalPages || 1;
+        } else {
+          break;
+        }
+        page++;
+      } while (page <= totalPages);
+      // Optionally: set allSubjects to redux if needed
+      // dispatch({ type: 'subjects/setAllSubjects', payload: allSubjects });
+    };
+    fetchAllSubjects();
     dispatch(fetchCurrentUser());
-  }, [dispatch, currentPage, pageSize]); // Remove searchTerm from dependency
+  }, [dispatch, currentPage, pageSize]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

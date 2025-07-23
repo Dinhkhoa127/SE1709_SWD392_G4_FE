@@ -281,16 +281,7 @@ const EditModalUser = ({ open, onClose, userInfo }) => {
                         </label>
                     </div>
 
-                    <div className="create-modal-note" style={{ marginBottom: '16px' }}>
-                        <i className="fas fa-info-circle"></i>
-                        <p>
-                            <strong>Thông tin debug:</strong><br/>
-                            User ID: {userInfo?.userAccountId || 'N/A'}<br/>
-                            Role ID hiện tại: {form.roleId} ({form.roleId === 1 ? 'Admin' : form.roleId === 3 ? 'Lecture' : 'Unknown'})<br/>
-                            Trạng thái: {form.isActive ? 'Hoạt động' : 'Vô hiệu hóa'}<br/>
-                            Password: {form.password ? 'Có thay đổi' : 'Không thay đổi'}
-                        </p>
-                    </div>
+                
 
                     <div className="form-actions">
                         <button 

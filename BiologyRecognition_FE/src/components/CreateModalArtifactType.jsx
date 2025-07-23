@@ -6,24 +6,30 @@ import { fetchTopics } from '../redux/thunks/topicThunks';
 import '../styles/CreateModal.css';
 const CreateModalArtifactType = ({ open, onClose, onSubmit, loading }) => {
     const dispatch = useDispatch();
+
     const { currentUser } = useSelector(state => state.user);
-    const { topics } = useSelector(state => state.topics);
-    
+    const { topics = [], totalPages: topicTotalPages = 1 } = useSelector(state => state.topics || {});
+
     const [form, setForm] = useState({
         topicId: '',
         name: '',
         description: ''
     });
+    // Logic phân trang cho topics (không thay đổi UI)
+    const [topicPage, setTopicPage] = useState(1);
+    const [topicPageSize, setTopicPageSize] = useState(100); // giữ mặc định 100 để đủ cho dropdown
 
     // Fetch current user and topics when modal opens
+
     useEffect(() => {
         if (open) {
             if (!currentUser) {
                 dispatch(fetchCurrentUser());
             }
-            dispatch(fetchTopics());
+            // Gọi fetchTopics với phân trang, không thay đổi UI
+            dispatch(fetchTopics({ page: topicPage, pageSize: topicPageSize }));
         }
-    }, [open, currentUser, dispatch]);
+    }, [open, currentUser, dispatch, topicPage, topicPageSize]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -57,12 +63,15 @@ const CreateModalArtifactType = ({ open, onClose, onSubmit, loading }) => {
         });
     };
 
+
     const handleClose = () => {
         setForm({
             topicId: '',
             name: '',
             description: ''
         });
+        setTopicPage(1);
+        setTopicPageSize(100);
         onClose();
     };
 

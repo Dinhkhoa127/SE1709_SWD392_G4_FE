@@ -25,10 +25,25 @@ const CreateModalChapter = ({ open, onClose, onSubmit, loading, subjects = [], i
         }
     }, [open, currentUser, dispatch]);
 
-    // Fetch subjects when modal opens
+    // Fetch all subjects with pagination when modal opens (nếu là chapter)
     useEffect(() => {
         if (open && isChapter) {
-            dispatch(fetchSubjects());
+            const fetchAllSubjects = async () => {
+                let page = 1;
+                let pageSize = 100;
+                let totalPages = 1;
+                do {
+                    const action = await dispatch(fetchSubjects({ page, pageSize }));
+                    const data = action?.payload;
+                    if (data && Array.isArray(data.subjects)) {
+                        totalPages = data.totalPages || 1;
+                    } else {
+                        break;
+                    }
+                    page++;
+                } while (page <= totalPages);
+            };
+            fetchAllSubjects();
         }
     }, [open, isChapter, dispatch]);
 

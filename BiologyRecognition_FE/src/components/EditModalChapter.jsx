@@ -41,10 +41,25 @@ const EditModalChapter = ({ open, onClose, onSubmit, initialData, loading }) => 
     }
   }, [open, currentUser, dispatch]);
 
-  // Fetch subjects when modal opens
+  // Fetch all subjects with pagination when modal opens
   useEffect(() => {
     if (open) {
-      dispatch(fetchSubjects({}));
+      const fetchAllSubjects = async () => {
+        let page = 1;
+        let pageSize = 100;
+        let totalPages = 1;
+        do {
+          const action = await dispatch(fetchSubjects({ page, pageSize }));
+          const data = action?.payload;
+          if (data && Array.isArray(data.subjects)) {
+            totalPages = data.totalPages || 1;
+          } else {
+            break;
+          }
+          page++;
+        } while (page <= totalPages);
+      };
+      fetchAllSubjects();
     }
   }, [open, dispatch]);
 
