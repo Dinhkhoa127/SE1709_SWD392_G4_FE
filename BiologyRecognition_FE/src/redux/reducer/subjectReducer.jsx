@@ -48,7 +48,8 @@ const subjectReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        error: action.payload
+        error: action.payload,
+        subjects: [] // Clear subjects when search fails
       };
     
     case FETCH_SUBJECT_BY_ID_REQUEST:

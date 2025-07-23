@@ -1,0 +1,90 @@
+.google-callback-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Inter', sans-serif;
+}
+
+.callback-content {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.callback-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.callback-icon.processing {
+    color: #4285f4;
+    animation: spin 1s linear infinite;
+}
+
+.callback-icon.error {
+    color: #dc3545;
+}
+
+.callback-icon.success {
+    color: #28a745;
+}
+
+.callback-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.callback-message {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.callback-submessage {
+    font-size: 14px;
+    color: #999;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Progress bar animation */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #f0f0f0;
+    border-radius: 2px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4285f4, #34a853);
+    border-radius: 2px;
+    animation: progress 2s ease-in-out;
+}
+
+@keyframes progress {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}

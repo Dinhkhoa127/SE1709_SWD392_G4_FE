@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
@@ -8,6 +8,7 @@ import EditModalArticle from '../components/EditModalArticle.jsx';
 import { fetchArticlesThunk, deleteArticleThunk, createArticleThunk, updateArticleThunk } from '../redux/thunks/articleThunks';
 import { clearArticleError } from '../redux/actions/articleActions';
 import { fetchArtifactsThunk } from '../redux/thunks/artifactThunks';
+import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
 import { formatDate } from '../utils/dateUtils';
 import '../styles/AdminPage.css';
 import '../styles/ArticlesPage.css';
@@ -19,6 +20,7 @@ const ArticlesPage = () => {
   const { articles = [], loading = false, error = null, deleting = false, creating = false, updating = false } = articlesState;
   const artifactsState = useSelector((state) => state.artifacts || {});
   const { artifacts = [] } = artifactsState;
+  const { currentUser } = useSelector(state => state.user);
 
   // Local state
   const [showDelete, setShowDelete] = useState(false);
@@ -26,6 +28,10 @@ const ArticlesPage = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const searchTermRef = useRef('');
 
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -40,26 +46,172 @@ const ArticlesPage = () => {
     localStorage.setItem('navbarCollapsed', JSON.stringify(newCollapsedState));
   };
 
-  // Fetch articles và artifacts khi component mount
+  // Cleanup timeout on unmount
   useEffect(() => {
-    dispatch(fetchArticlesThunk());
-    // Fetch artifacts để map artifactIds thành tên
-    dispatch(fetchArtifactsThunk());
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
+  // Fetch articles when component mount or pagination changes
+  useEffect(() => {
+    // Always fetch on mount and pagination changes
+    dispatch(fetchArticlesThunk({ 
+      page: currentPage, 
+      pageSize: pageSize,
+      includeDetails: true // Add this to get artifact relationships
+    }));
+    // Fetch current user
+    dispatch(fetchCurrentUser());
+  }, [dispatch, currentPage, pageSize]);
+
+  // Fetch artifacts để map artifactIds thành tên
+  useEffect(() => {
+    // Fetch all artifacts with high page size to get complete list with details
+    console.log('ArticlesPage - Fetching artifacts...');
+    dispatch(fetchArtifactsThunk({ 
+      page: 1, 
+      pageSize: 1000,
+      includeDetails: true 
+    }));
   }, [dispatch]);
 
-  // Handle refresh data
+  // Debug artifacts state
+  useEffect(() => {
+    console.log('ArticlesPage - artifacts state updated:', artifacts);
+  }, [artifacts]);
+
+  // Handle search with debounce - Server-side search
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // If search term is empty, fetch regular data
+    if (!value.trim()) {
+      setCurrentPage(1);
+      dispatch(fetchArticlesThunk({ 
+        page: 1,
+        pageSize: pageSize,
+        includeDetails: true
+      }));
+      return;
+    }
+    
+    // Debounce search
+    const newTimeout = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page when searching
+      dispatch(searchArticles({
+        artifactName: value.trim(),
+        page: 1,
+        pageSize: pageSize,
+        includeDetails: true
+      }));
+    }, 500);
+    
+    setSearchTimeout(newTimeout);
+  };
+
+  // Handle page change - Simplified for client-side search
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    
+    // Only use pagination when not searching (client-side search shows all results)
+    if (!searchTerm.trim()) {
+      dispatch(fetchArticlesThunk({ 
+        page: newPage,
+        pageSize: pageSize,
+        includeDetails: true
+      }));
+    }
+  };
+
+  // Handle page size change - Simplified for client-side search  
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+    
+    // Only use pagination when not searching (client-side search shows all results)
+    if (!searchTerm.trim()) {
+      dispatch(fetchArticlesThunk({ 
+        page: 1,
+        pageSize: newPageSize,
+        includeDetails: true
+      }));
+    }
+  };
+
+  // Handle refresh data - Simplified for client-side search
   const handleRefresh = () => {
-    dispatch(fetchArticlesThunk());
-    dispatch(fetchArtifactsThunk());
+    dispatch(fetchArticlesThunk({ 
+      page: currentPage,
+      pageSize: searchTerm.trim() ? 1000 : pageSize, // Get more data when searching
+      includeDetails: true
+    }));
+    // Refresh artifacts để map artifactIds thành tên
+    dispatch(fetchArtifactsThunk({ 
+      page: 1, 
+      pageSize: 1000,
+      includeDetails: true 
+    }));
   };
 
   // Helper function để map artifactIds thành tên
-  const getArtifactNames = (artifactIds) => {
+  const getArtifactNames = (article, highlightTerm = null) => {
+    // Try to get artifactIds from different possible field names
+    const artifactIds = article?.artifactIds || 
+                       article?.artifact_ids || 
+                       article?.ArtifactIds || 
+                       article?.artifacts || 
+                       [];
+    
+    console.log('getArtifactNames called with article:', article);
+    console.log('Extracted artifactIds:', artifactIds);
+    console.log('Available artifacts:', artifacts);
+    
     if (!artifactIds || !Array.isArray(artifactIds) || artifactIds.length === 0) {
       return 'Không có';
     }
     
     // Defensive check for artifacts array
+    if (!artifacts || !Array.isArray(artifacts)) {
+      return 'Đang tải...';
+    }
+    
+    const names = artifactIds.map(id => {
+      const artifact = artifacts.find(art => art && art.artifactId === id);
+      console.log(`Looking for artifact with ID ${id}:`, artifact);
+      return artifact ? artifact.artifactName : `ID: ${id}`;
+    });
+    
+    console.log('Mapped names:', names);
+    const fullText = names.join(', ');
+    
+    // If highlightTerm is provided, return JSX with highlighting
+    if (highlightTerm && highlightTerm.trim()) {
+      return highlightText(fullText, highlightTerm);
+    }
+    
+    return fullText;
+  };
+
+  // Helper function để lấy tên artifact dạng text (không có highlighting) - dùng cho filtering
+  const getArtifactNamesText = (article) => {
+    const artifactIds = article?.artifactIds || 
+                       article?.artifact_ids || 
+                       article?.ArtifactIds || 
+                       article?.artifacts || 
+                       [];
+    
+    if (!artifactIds || !Array.isArray(artifactIds) || artifactIds.length === 0) {
+      return 'Không có';
+    }
+    
     if (!artifacts || !Array.isArray(artifacts)) {
       return 'Đang tải...';
     }
@@ -72,34 +224,29 @@ const ArticlesPage = () => {
     return names.join(', ');
   };
 
-  // Filter articles based on search term with error handling
-  const filteredArticles = useMemo(() => {
-    try {
-      if (!articles || !Array.isArray(articles)) {
-        return [];
-      }
-      
-      return articles.filter(article => {
-        // Defensive check for article object
-        if (!article || typeof article !== 'object') {
-          return false;
-        }
-        
-        if (!searchTerm) return true;
-        
-        const title = article.title || '';
-        const content = article.content || '';
-        const artifactNames = getArtifactNames(article.artifactIds) || '';
-        
-        return (
-          title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          artifactNames.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      });
-    } catch (error) {
-      return [];
+  // Use client-side filtering when searching since API search doesn't include artifactIds
+  const displayedArticles = useMemo(() => {
+    if (!Array.isArray(articles)) return [];
+    
+    if (!searchTerm.trim()) {
+      return articles;
     }
+    
+    // Client-side filtering with full artifact relationship data
+    return articles.filter(article => {
+      if (!article) return false;
+      
+      const searchLower = searchTerm.toLowerCase();
+      const title = (article.title || '').toLowerCase();
+      const content = (article.content || '').toLowerCase();
+      
+      // Also search in artifact names using the helper function (without highlighting for filtering)
+      const artifactNames = getArtifactNamesText(article).toLowerCase();
+      
+      return title.includes(searchLower) || 
+             content.includes(searchLower) || 
+             artifactNames.includes(searchLower);
+    });
   }, [articles, searchTerm, artifacts]);
   
   // Helper function to highlight search term in text
@@ -129,6 +276,24 @@ const ArticlesPage = () => {
         toast.success('Xóa bài viết thành công!');
         setShowDelete(false);
         setSelectedArticle(null);
+        
+        // Use search + pagination if there's a search term
+        if (searchTerm.trim()) {
+          dispatch(searchArticles({
+            artifactName: searchTerm.trim(),
+            page: currentPage,
+            pageSize: pageSize,
+            includeDetails: true
+          }));
+        } else {
+          // Use regular pagination when no search term
+          dispatch(fetchArticlesThunk({ 
+            page: currentPage,
+            pageSize: pageSize,
+            includeDetails: true
+          }));
+        }
+        
       } catch (error) {
         toast.error('Có lỗi xảy ra khi xóa bài viết!');
       }
@@ -137,6 +302,7 @@ const ArticlesPage = () => {
 
   // Handle create article
   const handleCreateArticle = () => {
+    console.log('Opening create modal with artifacts:', artifacts);
     setShowCreate(true);
   };
 
@@ -146,10 +312,22 @@ const ArticlesPage = () => {
       toast.success('Tạo bài viết thành công!');
       setShowCreate(false);
       
-      // Force immediate refresh to ensure UI update
-      setTimeout(() => {
-        dispatch(fetchArticlesThunk());
-      }, 100);
+      // Use search + pagination if there's a search term
+      if (searchTerm.trim()) {
+        dispatch(searchArticles({
+          artifactName: searchTerm.trim(),
+          page: currentPage,
+          pageSize: pageSize,
+          includeDetails: true
+        }));
+      } else {
+        // Use regular pagination when no search term
+        dispatch(fetchArticlesThunk({ 
+          page: currentPage,
+          pageSize: pageSize,
+          includeDetails: true
+        }));
+      }
       
     } catch (error) {
       toast.error('Có lỗi xảy ra khi tạo bài viết!');
@@ -158,6 +336,8 @@ const ArticlesPage = () => {
 
   // Handle edit article
   const handleEditArticle = (article) => {
+    console.log('Article to edit:', article);
+    console.log('Available artifacts for mapping:', artifacts);
     setSelectedArticle(article);
     setShowEdit(true);
   };
@@ -170,10 +350,22 @@ const ArticlesPage = () => {
       setShowEdit(false);
       setSelectedArticle(null);
       
-      // Force immediate refresh to ensure UI update
-      setTimeout(() => {
-        dispatch(fetchArticlesThunk());
-      }, 100);
+      // Use search + pagination if there's a search term
+      if (searchTerm.trim()) {
+        dispatch(searchArticles({
+          artifactName: searchTerm.trim(),
+          page: currentPage,
+          pageSize: pageSize,
+          includeDetails: true
+        }));
+      } else {
+        // Use regular pagination when no search term
+        dispatch(fetchArticlesThunk({ 
+          page: currentPage,
+          pageSize: pageSize,
+          includeDetails: true
+        }));
+      }
       
     } catch (error) {
       toast.error('Có lỗi xảy ra khi cập nhật bài viết!');
@@ -218,15 +410,15 @@ const ArticlesPage = () => {
                 <i className="fas fa-search search-icon"></i>
                 <input
                   type="text"
-                  placeholder="Tìm kiếm theo tiêu đề, nội dung hoặc mẫu vật liên quan..."
+                  placeholder="Tìm kiếm theo mẫu vật liên quan"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="search-input"
                 />
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => handleSearchChange('')}
                     className="clear-search-btn"
                     title="Xóa tìm kiếm"
                   >
@@ -236,7 +428,7 @@ const ArticlesPage = () => {
               </div>
               {searchTerm && (
                 <div className="search-results-info">
-                  Tìm thấy {filteredArticles.length} kết quả cho "{searchTerm}"
+                  Tìm thấy {displayedArticles.length} kết quả cho "{searchTerm}"
                 </div>
               )}
             </div>
@@ -254,19 +446,15 @@ const ArticlesPage = () => {
                 <thead>
                   <tr>
                     <th>Tiêu đề</th>
-                    <th>Nội dung</th>
+                 
                     <th>Mẫu vật liên quan</th>
-                    <th>Người tạo</th>
-                    <th>Ngày tạo</th>
-                    <th>Người sửa cuối</th>
-                    <th>Ngày sửa cuối</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(filteredArticles.length === 0 && !loading) ? (
+                  {(displayedArticles.length === 0 && !loading) ? (
                     <tr>
-                      <td colSpan="8" className="empty-state">
+                      <td colSpan="3" className="empty-state">
                         <div className="empty-state-icon">
                           <i className="fas fa-inbox"></i>
                         </div>
@@ -274,28 +462,20 @@ const ArticlesPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredArticles.map(article => {
+                    displayedArticles.map(article => {
                       // Defensive check for article object
                       if (!article || typeof article !== 'object') {
                         return null;
                       }
+                     
                       
                       return (
                         <tr key={article.articleId || article.article_id || Math.random()}>
                           <td>{highlightText(article.title, searchTerm) || 'N/A'}</td>
-                          <td title={article.content || ''}>
-                            {article.content && article.content.length > 100
-                              ? `${article.content.substring(0, 100)}...`
-                              : (article.content || 'N/A')
-                            }
+                       
+                          <td title={getArtifactNamesText(article)}>
+                            {getArtifactNames(article, searchTerm)}
                           </td>
-                          <td title={getArtifactNames(article.artifactIds)}>
-                            {getArtifactNames(article.artifactIds)}
-                          </td>
-                          <td>{article.createName || article.createdName || article.CreatedBy || 'N/A'}</td>
-                          <td>{formatDate(article.createdDate || article.CreatedDate)}</td>
-                          <td>{article.modifiedName || article.ModifiedBy || 'N/A'}</td>
-                          <td>{formatDate(article.modifiedDate || article.ModifiedDate)}</td>
                           <td>
                             <div className="action-buttons-container">
                               <button 
@@ -324,12 +504,55 @@ const ArticlesPage = () => {
               </table>
             </div>
 
+            {/* Pagination Controls - Only show when not searching */}
+            {/* Pagination Controls */}
+            <div className="pagination-container">
+              <div className="pagination-info">
+                <span>Hiển thị</span>
+                <select 
+                  value={pageSize} 
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>mục mỗi trang</span>
+              </div>
+              
+              <div className="pagination-controls">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1 || loading}
+                  className={`pagination-btn ${currentPage <= 1 || loading ? 'disabled' : 'enabled'}`}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                  Trước
+                </button>
+                
+                <div className="pagination-current-page">
+                  Trang {currentPage}
+                </div>
+                
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={loading || (displayedArticles && displayedArticles.length < pageSize)}
+                  className={`pagination-btn ${loading || (displayedArticles && displayedArticles.length < pageSize) ? 'disabled' : 'enabled'}`}
+                >
+                  Sau
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+
             {/* Create Modal */}
             <CreateModalArticle
               open={showCreate}
               onClose={() => setShowCreate(false)}
               onSubmit={handleCreateSubmit}
               loading={creating}
+              artifacts={artifacts}
             />
 
             {/* Edit Modal */}
@@ -342,6 +565,7 @@ const ArticlesPage = () => {
               onSubmit={handleEditSubmit}
               initialData={selectedArticle}
               loading={updating}
+              artifacts={artifacts}
             />
 
             {/* Delete Modal */}

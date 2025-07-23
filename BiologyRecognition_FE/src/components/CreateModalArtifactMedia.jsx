@@ -31,7 +31,8 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
             if (!currentUser) {
                 dispatch(fetchCurrentUser());
             }
-            dispatch(fetchArtifactTypes());
+            // Force fetch all artifact types every time modal opens
+            dispatch(fetchArtifactTypes({ page: 1, pageSize: 100 }));
         }
     }, [open, dispatch]); // Loại bỏ currentUser từ dependencies để tránh vòng lặp
 
@@ -151,14 +152,14 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
                 </button>
                 <form className="create-modal-form" onSubmit={handleSubmit}>
                     <div className="form-group full-width">
-                        <label>Mẫu vật *</label>
+                        <label>Loại mẫu vật *</label>
                         <select
                             name="artifactId"
                             value={form.artifactId}
                             onChange={handleChange}
                             required
                         >
-                            <option value="">-- Chọn mẫu vật --</option>
+                            <option value="">-- Chọn loại mẫu vật --</option>
                             {artifactTypesLoading ? (
                                 <option value="">Đang tải...</option>
                             ) : artifactTypes && artifactTypes.length > 0 ? (

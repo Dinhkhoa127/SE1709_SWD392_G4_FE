@@ -4,9 +4,9 @@ import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import { 
     getSubjectsAPI, 
-    getChaptersBySubjectAPI, 
-    getTopicsByChapterAPI, 
-    getArtifactTypesByTopicAPI 
+    getChaptersAPI, 
+    getTopicsAPI, 
+    getArtifactTypesAPI 
 } from '../redux/services/apiService';
 import '../styles/CreateModal.css';
 
@@ -16,6 +16,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     
     const [form, setForm] = useState({
         artifactName: '',
+        artifactCode: '',
         description: '',
         scientificName: '',
         subjectId: '',
@@ -53,6 +54,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
         if (!open) {
             setForm({
                 artifactName: '',
+                artifactCode: '',
                 description: '',
                 scientificName: '',
                 subjectId: '',
@@ -88,7 +90,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchChaptersBySubject = async (subjectId) => {
         try {
             setLoadingStates(prev => ({ ...prev, chapters: true }));
-            const response = await getChaptersBySubjectAPI(subjectId);
+            const response = await getChaptersAPI({ subjectId });
             setDropdownData(prev => ({
                 ...prev,
                 chapters: response.data || response || [],
@@ -118,7 +120,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchTopicsByChapter = async (chapterId) => {
         try {
             setLoadingStates(prev => ({ ...prev, topics: true }));
-            const response = await getTopicsByChapterAPI(chapterId);
+            const response = await getTopicsAPI({ chapterId });
             setDropdownData(prev => ({
                 ...prev,
                 topics: response.data || response || [],
@@ -145,7 +147,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const fetchArtifactTypesByTopic = async (topicId) => {
         try {
             setLoadingStates(prev => ({ ...prev, artifactTypes: true }));
-            const response = await getArtifactTypesByTopicAPI(topicId);
+            const response = await getArtifactTypesAPI({ topicId });
             setDropdownData(prev => ({
                 ...prev,
                 artifactTypes: response.data || response || []
@@ -200,17 +202,20 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
 
         const artifactData = {
             name: form.artifactName,  // Backend expects "name" not "artifactName"
+            artifactCode: form.artifactCode,
             description: form.description,
             scientificName: form.scientificName,
             artifactTypeId: parseInt(form.artifactTypeId),
             createdBy: userId
         };
 
+        console.log('🚀 Submitting artifact data:', artifactData);
         onSubmit(artifactData);
         
         // Reset form
         setForm({
             artifactName: '',
+            artifactCode: '',
             description: '',
             scientificName: '',
             subjectId: '',
@@ -223,6 +228,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
     const handleClose = () => {
         setForm({
             artifactName: '',
+            artifactCode: '',
             description: '',
             scientificName: '',
             subjectId: '',
@@ -258,6 +264,19 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
                             value={form.artifactName} 
                             onChange={handleChange}
                             placeholder="Nhập tên mẫu vật"
+                            required
+                        />
+                    </div>
+
+                    {/* Artifact Code */}
+                    <div className="form-group full-width">
+                        <label>Mã mẫu vật *</label>
+                        <input 
+                            type="text"
+                            name="artifactCode" 
+                            value={form.artifactCode} 
+                            onChange={handleChange}
+                            placeholder="Nhập mã mẫu vật"
                             required
                         />
                     </div>
@@ -422,6 +441,7 @@ const CreateModalArtifact = ({ open, onClose, onSubmit, loading }) => {
                             disabled={
                                 loading || 
                                 !form.artifactName.trim() || 
+                                !form.artifactCode.trim() ||
                                 !form.description.trim() || 
                                 !form.scientificName.trim() ||
                                 !form.artifactTypeId ||

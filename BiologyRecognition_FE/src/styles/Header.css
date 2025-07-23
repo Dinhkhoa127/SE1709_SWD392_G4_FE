@@ -2,7 +2,7 @@
 .top-bar {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  padding: 15px 20px; /* Adjusted padding for a more compact look */
+  padding: 8px 20px; /* Adjusted padding for a more compact look */
   display: flex;
   justify-content: space-between;
   align-items: center;

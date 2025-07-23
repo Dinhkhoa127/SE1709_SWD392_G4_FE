@@ -853,3 +853,34 @@
   margin-bottom: 12px;
   color: #667eea;
 }
+
+/* Role badges */
+.role-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-icon {
+  width: 16px;
+  color: #4a5568;
+}
+
+.role-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.admin {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.role-badge.lecture {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+}

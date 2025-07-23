@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar.jsx';
@@ -8,7 +8,7 @@ import CreateModalArtifactType from '../components/CreateModalArtifactType.jsx';
 import EditModalArtifactType from '../components/EditModalArtifactType.jsx';
 import DeleteModal from '../components/DeleteModal.jsx';
 
-import { fetchArtifactTypes, fetchArtifactTypeById, createArtifactType, updateArtifactType, deleteArtifactType } from '../redux/thunks/artifactTypeThunks.jsx';
+import { fetchArtifactTypes, searchArtifactTypes, fetchArtifactTypeById, createArtifactType, updateArtifactType, deleteArtifactType } from '../redux/thunks/artifactTypeThunks.jsx';
 import { fetchCurrentUser } from '../redux/thunks/userThunks.jsx';
 import { fetchTopics } from '../redux/thunks/topicThunks.jsx';
 
@@ -30,6 +30,22 @@ const ArtifactTypePage = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [selectedArtifactType, setSelectedArtifactType] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalArtifactTypes, setTotalArtifactTypes] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  // Debounce search term
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   // Helper function to get topic name from topicId
   const getTopicName = (topicId) => {
@@ -37,15 +53,8 @@ const ArtifactTypePage = () => {
     return topic ? topic.topicName || topic.name : `Topic ID: ${topicId}`;
   };
 
-  // Filter artifact types based on search term
-  const filteredArtifactTypes = (Array.isArray(artifactTypes) ? artifactTypes : []).filter(artifactType => {
-    const topicName = getTopicName(artifactType.topicId);
-    return (
-      artifactType.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      topicName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artifactType.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  // Display data from server response (no client-side filtering for pagination)
+  const displayedArtifactTypes = Array.isArray(artifactTypes) ? artifactTypes : [];
 
   // Helper function to highlight search term in text
   const highlightText = (text, searchTerm) => {
@@ -61,9 +70,57 @@ const ArtifactTypePage = () => {
     );
   };
 
-  // Fetch artifact types and current user when component mount
+  // Fetch artifact types when pagination changes or component mounts
   useEffect(() => {
-    dispatch(fetchArtifactTypes());
+    const fetchData = () => {
+      if (searchTerm.trim()) {
+        // Use search API for searching
+        dispatch(searchArtifactTypes(searchTerm));
+      } else {
+        // Use paginated API for normal listing
+        dispatch(fetchArtifactTypes({
+          page: currentPage,
+          pageSize: pageSize
+        }));
+      }
+    };
+
+    fetchData();
+  }, [dispatch, currentPage, pageSize]); // Remove searchTerm from dependency
+
+  // Handle search with debounce
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+    
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for debounced search
+    const newTimeout = setTimeout(() => {
+      if (value.trim()) {
+        // Use search API with pagination
+        dispatch(searchArtifactTypes({
+          name: value.trim(),
+          page: 1,
+          pageSize: pageSize
+        }));
+      } else {
+        // Use regular fetch API with pagination
+        dispatch(fetchArtifactTypes({
+          page: 1,
+          pageSize: pageSize
+        }));
+      }
+    }, 300);
+    
+    setSearchTimeout(newTimeout);
+  };
+
+  // Fetch current user and topics once when component mounts
+  useEffect(() => {
     dispatch(fetchCurrentUser());
     dispatch(fetchTopics());
   }, [dispatch]);
@@ -81,6 +138,19 @@ const ArtifactTypePage = () => {
       .then(() => {
         setShowCreate(false);
         toast.success('Tạo loại mẫu vật thành công!');
+        // Refresh data based on current state
+        if (searchTerm.trim()) {
+          dispatch(searchArtifactTypes({
+            name: searchTerm.trim(),
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        } else {
+          dispatch(fetchArtifactTypes({
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        }
       })
       .catch(() => {
         toast.error('Có lỗi xảy ra khi tạo loại mẫu vật!');
@@ -98,6 +168,19 @@ const ArtifactTypePage = () => {
         setShowEdit(false);
         setSelectedArtifactType(null);
         toast.success('Cập nhật loại mẫu vật thành công!');
+        // Refresh data based on current state
+        if (searchTerm.trim()) {
+          dispatch(searchArtifactTypes({
+            name: searchTerm.trim(),
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        } else {
+          dispatch(fetchArtifactTypes({
+            page: currentPage,
+            pageSize: pageSize
+          }));
+        }
       })
       .catch(() => {
         toast.error('Có lỗi xảy ra khi cập nhật loại mẫu vật!');
@@ -116,6 +199,19 @@ const ArtifactTypePage = () => {
           setShowDelete(false);
           setSelectedArtifactType(null);
           toast.success('Xóa loại mẫu vật thành công!');
+          // Refresh data based on current state
+          if (searchTerm.trim()) {
+            dispatch(searchArtifactTypes({
+              name: searchTerm.trim(),
+              page: currentPage,
+              pageSize: pageSize
+            }));
+          } else {
+            dispatch(fetchArtifactTypes({
+              page: currentPage,
+              pageSize: pageSize
+            }));
+          }
         })
         .catch(() => {
           toast.error('Có lỗi xảy ra khi xóa loại mẫu vật!');
@@ -130,27 +226,45 @@ const ArtifactTypePage = () => {
     setSelectedArtifactType(null);
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Đang tải dữ liệu...</p>
-      </div>
-    );
-  }
+  // Pagination handlers
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    
+    // Use search + pagination if there's a search term
+    if (searchTerm.trim()) {
+      dispatch(searchArtifactTypes({
+        name: searchTerm.trim(),
+        page: newPage,
+        pageSize: pageSize
+      }));
+    } else {
+      // Use regular pagination when no search term
+      dispatch(fetchArtifactTypes({
+        page: newPage,
+        pageSize: pageSize
+      }));
+    }
+  };
 
-  // Error state
-  if (error) {
-    return (
-      <div className="error-container">
-        <p className="error-message">Lỗi: {error}</p>
-        <button className="btn btn-primary" onClick={() => dispatch(fetchArtifactTypes())}>
-          Thử lại
-        </button>
-      </div>
-    );
-  }
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+    
+    // Use search + pagination if there's a search term
+    if (searchTerm.trim()) {
+      dispatch(searchArtifactTypes({
+        name: searchTerm.trim(),
+        page: 1,
+        pageSize: newPageSize
+      }));
+    } else {
+      // Use regular pagination when no search term
+      dispatch(fetchArtifactTypes({
+        page: 1,
+        pageSize: newPageSize
+      }));
+    }
+  };
 
   return (
     <>
@@ -182,15 +296,24 @@ const ArtifactTypePage = () => {
                 <i className="fas fa-search search-icon"></i>
                 <input
                   type="text"
-                  placeholder="Tìm kiếm theo tên bài, tên loại hoặc mô tả..."
+                  placeholder="Tìm kiếm theo tên loại mẫu vật"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    handleSearchChange(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
                   className="search-input"
                 />
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => {
+                      handleSearchChange('');
+                    }}
                     className="clear-search-btn"
                     title="Xóa tìm kiếm"
                   >
@@ -200,58 +323,112 @@ const ArtifactTypePage = () => {
               </div>
               {searchTerm && (
                 <div className="search-results-info">
-                  Tìm thấy {filteredArtifactTypes.length} kết quả cho "{searchTerm}"
+                  Tìm thấy {displayedArtifactTypes.length} kết quả cho "<strong>{searchTerm}</strong>"
                 </div>
               )}
             </div>
 
             <div className="table-responsive">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Tên chủ đề</th>
-                    <th>Tên loại mẫu vật</th>
-                    <th>Mô tả</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredArtifactTypes && filteredArtifactTypes.length > 0 ? (
-                    filteredArtifactTypes.map(artifactType => (
-                      <tr key={artifactType.artifactTypeId}>
-                        <td>{highlightText(getTopicName(artifactType.topicId), searchTerm)}</td>
-                        <td>{highlightText(artifactType.name, searchTerm)}</td>
-                        <td>{highlightText(artifactType.description, searchTerm)}</td>
-                        <td>
-                          <button 
-                            className="btn btn-sm btn-edit" 
-                            title="Sửa"
-                            onClick={() => handleEditArtifactType(artifactType)}
-                            disabled={updateLoading}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-delete" 
-                            title="Xóa"
-                            onClick={() => handleDeleteArtifactType(artifactType)}
-                            disabled={deleteLoading}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
+              {loading ? (
+                <div className="text-center py-4">
+                  <i className="fas fa-spinner fa-spin fa-2x"></i>
+                  <p className="mt-2">Đang tải dữ liệu...</p>
+                </div>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tên loại mẫu vật</th>
+                      <th>Tên chủ đề</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!loading && displayedArtifactTypes.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className="empty-state">
+                          <div className="empty-state-icon">
+                            <i className="fas fa-inbox"></i>
+                          </div>
+                          {searchTerm ? `Không tìm thấy loại mẫu vật nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu loại mẫu vật'}
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center">
-                        {searchTerm ? `Không tìm thấy loại mẫu vật nào với từ khóa "${searchTerm}"` : 'Không có dữ liệu loại mẫu vật'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      displayedArtifactTypes.map(artifactType => (
+                        <tr key={artifactType.artifactTypeId}>
+                           <td>{highlightText(artifactType.name, searchTerm)}</td>
+                          <td>{highlightText(getTopicName(artifactType.topicId), searchTerm)}</td>
+                      
+                          <td>
+                            <div className="action-buttons-container">
+                              <button 
+                                className="btn-edit" 
+                                title="Sửa"
+                                onClick={() => handleEditArtifactType(artifactType)}
+                                disabled={updateLoading}
+                              >
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button 
+                                className="btn-delete" 
+                                title="Xóa"
+                                onClick={() => handleDeleteArtifactType(artifactType)}
+                                disabled={deleteLoading}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
+
+            {/* Pagination Controls - Always show when there are artifact types */}
+            {displayedArtifactTypes.length > 0 && (
+              <div className="pagination-container">
+                <div className="pagination-info">
+                  <span>Hiển thị</span>
+                  <select 
+                    value={pageSize} 
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span>mục mỗi trang</span>
+                </div>
+                
+                <div className="pagination-controls">
+                  <button 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1 || loading}
+                    className={`pagination-btn ${currentPage <= 1 || loading ? 'disabled' : 'enabled'}`}
+                  >
+                    <i className="fas fa-chevron-left"></i>
+                    Trước
+                  </button>
+                  
+                  <div className="pagination-current-page">
+                    Trang {currentPage}
+                  </div>
+                  
+                  <button 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={loading || (displayedArtifactTypes && displayedArtifactTypes.length < pageSize)}
+                    className={`pagination-btn ${loading || (displayedArtifactTypes && displayedArtifactTypes.length < pageSize) ? 'disabled' : 'enabled'}`}
+                  >
+                    Sau
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

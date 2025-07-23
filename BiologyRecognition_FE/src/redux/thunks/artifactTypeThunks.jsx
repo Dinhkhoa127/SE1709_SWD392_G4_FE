@@ -18,21 +18,42 @@ import {
 
 import {
   getArtifactTypesAPI,
-  getArtifactTypeByIdAPI,
   createArtifactTypeAPI,
   updateArtifactTypeAPI,
   deleteArtifactTypeAPI
 } from '../services/apiService';
 
 // Thunk để fetch tất cả artifact types
-export const fetchArtifactTypes = () => {
+export const fetchArtifactTypes = (params = {}) => {
   return async (dispatch) => {
     dispatch(fetchArtifactTypesRequest());
     try {
-      const response = await getArtifactTypesAPI();
+      console.log('Fetching artifact types with params:', params);
+      const response = await getArtifactTypesAPI(params);
+      console.log('Artifact types API response:', response);
+      console.log('Artifact types data:', response.data || response);
       dispatch(fetchArtifactTypesSuccess(response.data || response));
+      return { payload: response.data || response };
     } catch (error) {
+      console.error('Error fetching artifact types:', error);
       dispatch(fetchArtifactTypesFailure(error.response?.data?.message || error.message || 'Failed to fetch artifact types'));
+      throw error;
+    }
+  };
+};
+
+// Thunk để search artifact types theo tên với pagination
+export const searchArtifactTypes = (params = {}) => {
+  return async (dispatch) => {
+    dispatch(fetchArtifactTypesRequest());
+    try {
+      const response = await getArtifactTypesAPI(params);
+      dispatch(fetchArtifactTypesSuccess(response.data || response));
+      return { payload: response.data || response };
+    } catch (error) {
+      // Don't show error message for search failures, just clear results
+      dispatch(fetchArtifactTypesFailure(''));
+      return { payload: [] };
     }
   };
 };
@@ -42,7 +63,7 @@ export const fetchArtifactTypeById = (artifactTypeId) => {
   return async (dispatch) => {
     dispatch(fetchArtifactTypeByIdRequest());
     try {
-      const response = await getArtifactTypeByIdAPI(artifactTypeId);
+      const response = await getArtifactTypesAPI({ id: artifactTypeId });
       dispatch(fetchArtifactTypeByIdSuccess(response.data || response));
     } catch (error) {
       dispatch(fetchArtifactTypeByIdFailure(error.response?.data?.message || error.message || 'Failed to fetch artifact type'));
@@ -57,7 +78,6 @@ export const createArtifactType = (artifactTypeData) => {
     try {
       const response = await createArtifactTypeAPI(artifactTypeData);
       dispatch(createArtifactTypeSuccess(response.data || response));
-      dispatch(fetchArtifactTypes()); // Refresh the list
       return Promise.resolve();
     } catch (error) {
       dispatch(createArtifactTypeFailure(error.response?.data?.message || error.message || 'Failed to create artifact type'));
@@ -73,7 +93,6 @@ export const updateArtifactType = (artifactTypeData) => {
     try {
       const response = await updateArtifactTypeAPI(artifactTypeData);
       dispatch(updateArtifactTypeSuccess(response.data || response));
-      dispatch(fetchArtifactTypes()); // Refresh the list
       return Promise.resolve();
     } catch (error) {
       dispatch(updateArtifactTypeFailure(error.response?.data?.message || error.message || 'Failed to update artifact type'));

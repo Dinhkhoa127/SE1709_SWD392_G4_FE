@@ -28,6 +28,11 @@ export const DELETE_USER_FAILURE = 'DELETE_USER_FAILURE';
 export const SET_SELECTED_USER = 'SET_SELECTED_USER';
 export const CLEAR_USER_ERROR = 'CLEAR_USER_ERROR';
 
+// Update My Info Action Types
+export const UPDATE_MY_INFO_REQUEST = 'UPDATE_MY_INFO_REQUEST';
+export const UPDATE_MY_INFO_SUCCESS = 'UPDATE_MY_INFO_SUCCESS';
+export const UPDATE_MY_INFO_FAILURE = 'UPDATE_MY_INFO_FAILURE';
+
 // Current User Action creators
 export const fetchCurrentUserRequest = () => ({
   type: FETCH_CURRENT_USER_REQUEST
@@ -132,4 +137,19 @@ export const setSelectedUser = (user) => ({
 
 export const clearUserError = () => ({
   type: CLEAR_USER_ERROR
+});
+
+// Update My Info Action Creators
+export const updateMyInfoRequest = () => ({
+  type: UPDATE_MY_INFO_REQUEST
+});
+
+export const updateMyInfoSuccess = (user) => ({
+  type: UPDATE_MY_INFO_SUCCESS,
+  payload: user
+});
+
+export const updateMyInfoFailure = (error) => ({
+  type: UPDATE_MY_INFO_FAILURE,
+  payload: error
 });

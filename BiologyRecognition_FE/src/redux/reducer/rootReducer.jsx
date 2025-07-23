@@ -7,6 +7,7 @@ import artifactReducer from "./artifactReducer";
 import artifactTypeReducer from "./artifactTypeReducer";
 import artifactMediaReducer from "./artifactMediaReducer";
 import articleReducer from "./articleReducer";
+import recognitionReducer from "./recognitionReducer";
 
 
 const rootReducer = combineReducers({
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
     artifactTypes: artifactTypeReducer,
     artifactMedia: artifactMediaReducer,
     articles: articleReducer,
+    recognitions: recognitionReducer,
 });
 
 export default rootReducer;

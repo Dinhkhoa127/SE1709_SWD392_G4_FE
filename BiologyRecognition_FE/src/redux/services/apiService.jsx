@@ -1,7 +1,7 @@
 import instance from "../util/axiosCustomize";
 
 const loginAPI = async (usernameOrEmail, password) => {
-    const URL_API = "/authentication/login";
+    const URL_API = "/auth/login";
     let data = {
         usernameOrEmail: usernameOrEmail,
         password: password,
@@ -9,24 +9,47 @@ const loginAPI = async (usernameOrEmail, password) => {
     return instance.post(URL_API, data);
 }
 
-const loginGoogleAPI = async () => {
-    window.location.href = `${import.meta.env.VITE_BE_API_URL}/authentication/login-google`;
+const loginGoogleAPI = async (redirectUrl = null) => {
+    // Tạo redirect URL mặc định nếu không được cung cấp
+    const defaultRedirect = window.location.origin + '/auth/google-callback';
+    const redirect = redirectUrl || defaultRedirect;
+    
+    // Redirect đến Google OAuth với callback URL
+    window.location.href = `${import.meta.env.VITE_BE_API_URL}/auth/login-google?redirect=${encodeURIComponent(redirect)}`;
 }
 
 const getCurrentUserAPI = async () => {
-    const URL_API = "/authentication/current-user";
-    return instance.get(URL_API);
+    // Thử với endpoint auth/current-user trước
+    try {
+        const URL_API = "/auth/current-user";
+        console.log('🔍 Trying getCurrentUserAPI with:', URL_API);
+        return await instance.get(URL_API);
+    } catch (error) {
+        console.error('❌ getCurrentUserAPI failed with /auth/current-user:', error.response?.status);
+        
+        // Nếu không thành công, thử với endpoint khác hoặc lấy từ localStorage
+        if (error.response?.status === 400 || error.response?.status === 404) {
+            console.log('🔄 Fallback: Getting user from localStorage');
+            
+            const currentUserData = localStorage.getItem('currentUser');
+            if (currentUserData) {
+                try {
+                    const user = JSON.parse(currentUserData);
+                    return { data: user };
+                } catch (parseError) {
+                    console.error('Error parsing localStorage user:', parseError);
+                    throw error;
+                }
+            }
+        }
+        throw error;
+    }
 }
 
 // Subject APIs
-const getSubjectsAPI = async () => {
+const getSubjectsAPI = async (params = {}) => {
     const URL_API = "/subject";
-    return instance.get(URL_API);
-}
-
-const getSubjectByIdAPI = async (subjectId) => {
-    const URL_API = `/subject/${subjectId}`;
-    return instance.get(URL_API);
+    return instance.get(URL_API, { params });
 }
 
 const createSubjectAPI = async (subjectData) => {
@@ -45,9 +68,9 @@ const deleteSubjectAPI = async (subjectId) => {
 }
 
 // Topic APIs
-const getTopicsAPI = async () => {
+const getTopicsAPI = async (params = {}) => {
     const URL_API = "/topic";
-    return instance.get(URL_API);
+    return instance.get(URL_API, { params });
 }
 
 const getTopicsByChapterAPI = async (chapterId) => {
@@ -55,10 +78,6 @@ const getTopicsByChapterAPI = async (chapterId) => {
     return instance.get(URL_API);
 }
 
-const getTopicByIdAPI = async (topicId) => {
-    const URL_API = `/topic/${topicId}`;
-    return instance.get(URL_API);
-}
 
 const createTopicAPI = async (topicData) => {
     const URL_API = "/topic";
@@ -76,19 +95,9 @@ const deleteTopicAPI = async (topicId) => {
 }
 
 // Chapter APIs
-const getChaptersAPI = async () => {
+const getChaptersAPI = async (params = {}) => {
     const URL_API = "/chapter";
-    return instance.get(URL_API);
-}
-
-const getChaptersBySubjectAPI = async (subjectId) => {
-    const URL_API = `/chapter/by-subject/${subjectId}`;
-    return instance.get(URL_API);
-}
-
-const getChapterByIdAPI = async (chapterId) => {
-    const URL_API = `/chapter/${chapterId}`;
-    return instance.get(URL_API);
+    return instance.get(URL_API, { params });
 }
 
 const createChapterAPI = async (chapterData) => {
@@ -107,15 +116,11 @@ const deleteChapterAPI = async (chapterId) => {
 }
 
 // Artifact APIs
-const getArtifactsAPI = async () => {
+const getArtifactsAPI = async (params = {}) => {
     const URL_API = "/artifact";
-    return instance.get(URL_API);
+    return instance.get(URL_API, { params });
 }
 
-const getArtifactByIdAPI = async (artifactId) => {
-    const URL_API = `/artifact/${artifactId}`;
-    return instance.get(URL_API);
-}
 
 const createArtifactAPI = async (artifactData) => {
     const URL_API = "/artifact";
@@ -133,47 +138,32 @@ const deleteArtifactAPI = async (artifactId) => {
 }
 
 // Artifact Type APIs
-const getArtifactTypesAPI = async () => {
-    const URL_API = "/artifactType";
-    return instance.get(URL_API);
-}
-
-
-const getArtifactTypesByTopicAPI = async (topicId) => {
-    const URL_API = `/artifactType/by-topic/${topicId}`;
-    return instance.get(URL_API);
-}
-
-const getArtifactTypeByIdAPI = async (artifactTypeId) => {
-    const URL_API = `/artifactType/${artifactTypeId}`;
-    return instance.get(URL_API);
+const getArtifactTypesAPI = async (params = {}) => {
+    const URL_API = "/artifacttype";
+    return instance.get(URL_API, { params });
 }
 
 const createArtifactTypeAPI = async (artifactTypeData) => {
-    const URL_API = "/artifactType";
+    const URL_API = "/artifacttype";
     return instance.post(URL_API, artifactTypeData);
 }
 
 const updateArtifactTypeAPI = async (artifactTypeData) => {
-    const URL_API = "/artifactType";
+    const URL_API = "/artifacttype";
     return instance.put(URL_API, artifactTypeData);
 }
 
 const deleteArtifactTypeAPI = async (artifactTypeId) => {
-    const URL_API = `/artifactType/${artifactTypeId}`;
+    const URL_API = `/artifacttype/${artifactTypeId}`;
     return instance.delete(URL_API);
 }
 
 // Artifact Media APIs
-const getArtifactMediaAPI = async () => {
+const getArtifactMediaAPI = async (params = {}) => {
     const URL_API = "/artifactMedia";
-    return instance.get(URL_API);
+    return instance.get(URL_API, { params });
 }
 
-const getArtifactMediaByIdAPI = async (artifactMediaId) => {
-    const URL_API = `/artifactMedia/${artifactMediaId}`;
-    return instance.get(URL_API);
-}
 
 const createArtifactMediaAPI = async (artifactMediaData) => {
     const URL_API = "/artifactMedia";
@@ -191,15 +181,11 @@ const deleteArtifactMediaAPI = async (artifactMediaId) => {
 }
 
 // Article APIs
-const getArticlesAPI = async () => {
-    const URL_API = "/article/details";
-    return instance.get(URL_API);
+const getArticlesAPI = async (params = {}) => {
+    const URL_API = "/article";
+    return instance.get(URL_API, { params });
 }
 
-const getArticleByIdAPI = async (articleId) => {
-    const URL_API = `/article/${articleId}`;
-    return instance.get(URL_API);
-}
 
 const createArticleAPI = async (articleData) => {
     const URL_API = "/article";
@@ -217,9 +203,9 @@ const deleteArticleAPI = async (articleId) => {
 }
 
 // Users Management APIs
-const getUsersAPI = async () => {
+const getUsersAPI = async (params = {}) => {
     const URL_API = "/user-accounts";
-    return instance.get(URL_API);
+    return instance.get(URL_API, { params });
 }
 
 const getUserByIdAPI = async (userId) => {
@@ -228,19 +214,91 @@ const getUserByIdAPI = async (userId) => {
 }
 
 const createUserAPI = async (userData) => {
-    const URL_API = "/user";
-    return instance.post(URL_API, userData);
+    const URL_API = "/user-accounts";
+    console.log('Sending create user request:', userData); // Debug log
+    try {
+        const response = await instance.post(URL_API, userData);
+        console.log('Create user API response:', response); // Debug log
+        return response;
+    } catch (error) {
+        console.error('Create user API error:', error); // Debug log
+        throw error;
+    }
 }
 
 const updateUserAPI = async (userData) => {
-    const URL_API = "/user";
-    return instance.put(URL_API, userData);
+    const URL_API = "/user-accounts/admin";
+    console.log('Sending update user request:', userData); // Debug log
+    try {
+        const response = await instance.put(URL_API, userData);
+        console.log('Update user API response:', response); // Debug log
+        return response;
+    } catch (error) {
+        console.error('Update user API error:', error); // Debug log
+        throw error;
+    }
+}
+
+const updateMyInfoAPI = async (userData) => {
+    const URL_API = "/user-accounts/me/info";
+    console.log('🔄 Sending update my info request:', userData);
+    console.log('🔗 Full URL:', `${import.meta.env.VITE_BE_API_URL}${URL_API}`);
+    
+    // Lấy current user từ localStorage để có UserAccountId
+    const currentUserData = localStorage.getItem('currentUser');
+    let userAccountId = null;
+    
+    if (currentUserData) {
+        try {
+            const currentUser = JSON.parse(currentUserData);
+            userAccountId = currentUser.userAccountId || currentUser.id;
+        } catch (error) {
+            console.error('Error parsing current user data:', error);
+        }
+    }
+    
+    if (!userAccountId) {
+        throw new Error('Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.');
+    }
+    
+    // Thêm UserAccountId vào request body theo yêu cầu của backend
+    const requestData = {
+        userAccountId: userAccountId,
+        fullName: userData.fullName,
+        email: userData.email,
+        phone: userData.phone
+    };
+    
+    console.log('🔄 Final request data with UserAccountId:', requestData);
+    
+    try {
+        const response = await instance.put(URL_API, requestData);
+        console.log('✅ Update my info API response:', response);
+        return response;
+    } catch (error) {
+        console.error('❌ Update my info API error:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message,
+            url: error.config?.url
+        });
+        throw error;
+    }
 }
 
 const deleteUserAPI = async (userId) => {
     const URL_API = `/user/${userId}`;
     return instance.delete(URL_API);
 }
+
+// Recognition APIs
+const getRecognitionsAPI = async (params = {}) => {
+    const URL_API = "/recognition";
+    return instance.get(URL_API, { params });
+}
+
+
 
 export { 
     loginAPI, 
@@ -249,52 +307,42 @@ export {
 
     // Subject APIs
     getSubjectsAPI,
-    getSubjectByIdAPI,
     createSubjectAPI,
     updateSubjectAPI,
     deleteSubjectAPI,
 
-    // Topic APIs
-    getTopicsAPI,
-    getTopicsByChapterAPI,
-    getTopicByIdAPI,
-    createTopicAPI,
-    updateTopicAPI,
-    deleteTopicAPI,
-
     // Chapter APIs
     getChaptersAPI,
-    getChaptersBySubjectAPI,
-    getChapterByIdAPI,
     createChapterAPI,
     updateChapterAPI,
     deleteChapterAPI,
 
+    // Topic APIs
+    getTopicsAPI,
+    createTopicAPI,
+    updateTopicAPI,
+    deleteTopicAPI,
+
     // Artifact APIs
     getArtifactsAPI,
-    getArtifactByIdAPI,
     createArtifactAPI,
     updateArtifactAPI,
     deleteArtifactAPI,
 
     // Artifact Type APIs
     getArtifactTypesAPI,
-    getArtifactTypesByTopicAPI,
     createArtifactTypeAPI,
-    getArtifactTypeByIdAPI,
     updateArtifactTypeAPI,
     deleteArtifactTypeAPI,
 
     //Artifact Media APIs
     getArtifactMediaAPI,
-    getArtifactMediaByIdAPI,
     createArtifactMediaAPI,
     updateArtifactMediaAPI,
     deleteArtifactMediaAPI,
 
     // Article APIs
     getArticlesAPI,
-    getArticleByIdAPI,
     createArticleAPI,
     updateArticleAPI,
     deleteArticleAPI,
@@ -304,5 +352,10 @@ export {
     getUserByIdAPI,
     createUserAPI,
     updateUserAPI,
-    deleteUserAPI
+    updateMyInfoAPI,
+    deleteUserAPI,
+
+    // Recognition APIs
+    getRecognitionsAPI,
+  
 };

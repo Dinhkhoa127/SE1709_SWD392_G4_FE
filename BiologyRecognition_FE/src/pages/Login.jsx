@@ -1,19 +1,79 @@
 // src/components/Login.js
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUserSuccess } from '../redux/actions/userActions';
+import { navigateByRole, getDefaultRouteByRole } from '../utils/roleUtils';
 import '../styles/Login.css';
-import { loginAPI, loginGoogleAPI } from '../redux/services/apiService';
+import { loginAPI, loginGoogleAPI, getCurrentUserAPI } from '../redux/services/apiService';
 
 const Login = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Kiểm tra callback từ Google login
+    useEffect(() => {
+        const processGoogleCallback = async () => {
+            const token = searchParams.get('token') || searchParams.get('accessToken');
+            const errorParam = searchParams.get('error');
+
+            if (errorParam) {
+                setError('Đăng nhập Google thất bại: ' + errorParam);
+                return;
+            }
+
+            if (token) {
+                setIsLoading(true);
+                try {
+                    console.log('Processing Google login with token:', token);
+                    
+                    // Lưu token trước
+                    localStorage.setItem('accessToken', token);
+                    
+                    // Fetch thông tin user từ API
+                    const userResponse = await getCurrentUserAPI();
+                    const user = userResponse.data || userResponse;
+                    
+                    console.log('User data from API:', user);
+                    
+                    if (user && user.userAccountId) {
+                        // Lưu thông tin user vào localStorage
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        
+                        // Lưu thông tin user vào Redux store
+                        dispatch(fetchCurrentUserSuccess(user));
+                        
+                        // Phân quyền dựa trên roleId
+                        console.log('User roleId:', user.roleId);
+                        
+                        if (user.roleId) {
+                            navigateByRole(user.roleId, navigate);
+                        } else {
+                            // Nếu không có roleId, mặc định về admin
+                            console.warn('No roleId found, defaulting to admin');
+                            navigate('/admin', { replace: true });
+                        }
+                    } else {
+                        setError('Không thể lấy thông tin người dùng từ server');
+                    }
+                } catch (error) {
+                    console.error('Error processing Google callback:', error);
+                    setError('Có lỗi xảy ra khi xử lý đăng nhập Google');
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        processGoogleCallback();
+    }, [searchParams, navigate, dispatch]);
+    
 const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -33,11 +93,13 @@ const handleSubmit = async (e) => {
                 // Lưu thông tin user vào Redux store
                 dispatch(fetchCurrentUserSuccess(response));
                 
-                // Chuyển trang về AdminPage sau khi login thành công
-                navigate('/admin', { replace: true });
+                // Phân quyền dựa trên roleId sử dụng utility function
+                navigateByRole(response.roleId, navigate);
+                
                 // Backup method nếu navigate không hoạt động
+                const defaultRoute = getDefaultRouteByRole(response.roleId);
                 setTimeout(() => {
-                    window.location.href = '/admin';
+                    window.location.href = defaultRoute;
                 }, 100);
             } else {
                 setError('Đăng nhập thất bại - Thông tin không hợp lệ');
@@ -54,27 +116,23 @@ const handleSubmit = async (e) => {
         setError('');
 
         try {
-            const response = await loginGoogleAPI();
-            if (response.status === 200) {
-                // Chuyển trang về AdminPage sau khi login Google thành công
-                navigate('/admin');
-            } else {
-                setError(response.message);
-            }
+            // Redirect tới Google OAuth với callback về trang login
+            // Backend sẽ xử lý và redirect về /login với token trong URL params
+            const callbackUrl = encodeURIComponent(window.location.origin + '/login');
+            window.location.href = `${import.meta.env.VITE_BE_API_URL}/auth/login-google?redirect=${callbackUrl}`;
         } catch (error) {
-            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
-        } finally {
+            setError('Có lỗi xảy ra khi khởi tạo đăng nhập Google.');
             setIsLoading(false);
         }
     }
 
     return (
         <>
-  <link 
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
-        rel="stylesheet" 
-      />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></link>
+        <link 
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
+            rel="stylesheet" 
+        />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></link>
         <div className="login-page">
             {/* Left Side - Branding & Information */}
             <div className="login-left">
@@ -184,7 +242,7 @@ const handleSubmit = async (e) => {
                             {isLoading ? (
                                 <>
                                     <i className="fas fa-spinner fa-spin"></i>
-                                    Đang xử lý...
+                                    {searchParams.get('token') ? 'Đang xác thực Google...' : 'Đang xử lý...'}
                                 </>
                             ) : (
                                 <>
@@ -194,6 +252,21 @@ const handleSubmit = async (e) => {
                             )}
                         </button>
                     </form>
+
+                    {error && (
+                        <div style={{
+                            background: '#fee',
+                            color: '#c33',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            marginTop: '15px',
+                            border: '1px solid #fcc',
+                            textAlign: 'center'
+                        }}>
+                            <i className="fas fa-exclamation-triangle" style={{ marginRight: '8px' }}></i>
+                            {error}
+                        </div>
+                    )}
 
                     <div className="divider">
                         <span>hoặc</span>

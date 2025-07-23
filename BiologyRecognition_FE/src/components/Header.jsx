@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutUserThunk } from '../redux/thunks/userThunks';
@@ -6,6 +6,7 @@ import '../styles/Header.css'; // Import the CSS file
 
 const Header = ({ activeSection, isCollapsed, onToggleCollapse }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+  const dropdownRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector(state => state.user);
@@ -15,8 +16,12 @@ const Header = ({ activeSection, isCollapsed, onToggleCollapse }) => {
       'dashboard': 'Dashboard',
       'subjects': 'Subjects Management',
       'chapters': 'Chapters Management',
+      'topics': 'Topics Management',
       'artifacts': 'Artifacts Management',
+      'artifact-types': 'Artifact Types Management',
+      'artifact-medias': 'Artifact Medias Management',
       'articles': 'Articles Management',
+      'recognitions': 'Recognition Management',
       'settings': 'System Settings'
     };
     return sectionNames[section] || 'Dashboard';
@@ -32,6 +37,30 @@ const Header = ({ activeSection, isCollapsed, onToggleCollapse }) => {
     setDropdownOpen(false);
   };
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+    setDropdownOpen(false);
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
+    setDropdownOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className={`top-bar ${isCollapsed ? 'collapsed' : ''}`}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -44,7 +73,7 @@ const Header = ({ activeSection, isCollapsed, onToggleCollapse }) => {
         </div>
       </div>
       
-      <div className="user-info" style={{ position: 'relative' }}>
+      <div className="user-info" style={{ position: 'relative' }} ref={dropdownRef}>
         <div className="notification-icon">
           <i className="fas fa-bell"></i>
           <span className="notification-badge">3</span>
@@ -55,10 +84,10 @@ const Header = ({ activeSection, isCollapsed, onToggleCollapse }) => {
         </div>
         {dropdownOpen && (
           <div className="dropdown-menu">
-            <button className="dropdown-item">
+            <button className="dropdown-item" onClick={handleProfileClick}>
               <i className="fas fa-user"></i> My Profile
             </button>
-            <button className="dropdown-item">
+            <button className="dropdown-item" onClick={handleSettingsClick}>
               <i className="fas fa-cog"></i> Settings
             </button>
             <button className="dropdown-item" onClick={handleLogout}>

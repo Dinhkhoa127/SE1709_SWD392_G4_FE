@@ -11,9 +11,13 @@ import ArtifactsPage from "./pages/ArtifactsPage";
 import ArtifactTypesPage from "./pages/ArtifactTypesPage.jsx";
 import ArtifactMediasPage from "./pages/ArtifactMediasPage.jsx";
 import ArticlesPage from "./pages/ArticlesPage";
+import RecognitionsPage from "./pages/RecognitionsPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import WaitingPermissionPage from "./pages/WaitingPermissionPage.jsx";
 import Login from "./pages/Login.jsx";
+import GoogleCallback from "./pages/GoogleCallback.jsx";
 import "./App.css";
 
 function App() {
@@ -24,6 +28,12 @@ function App() {
       <BrowserRouter basename={import.meta.env.VITE_BASE_PATH}>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
+          <Route path="/waiting-permission" element={
+            <ProtectedRoute>
+              <WaitingPermissionPage />
+            </ProtectedRoute>
+          } />
           <Route path="/" element={<Login />} />
           <Route path="/admin" element={
             <ProtectedRoute>
@@ -65,9 +75,19 @@ function App() {
               <ArticlesPage />
             </ProtectedRoute>
           } />
+          <Route path="/recognitions" element={
+            <ProtectedRoute>
+              <RecognitionsPage />
+            </ProtectedRoute>
+          } />
           <Route path="/settings" element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           } />
           <Route path="/users" element={

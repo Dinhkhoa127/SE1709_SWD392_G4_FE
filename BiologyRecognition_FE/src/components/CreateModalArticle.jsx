@@ -5,10 +5,22 @@ import { fetchCurrentUser } from '../redux/thunks/userThunks';
 import { fetchArtifactsThunk } from '../redux/thunks/artifactThunks';
 import '../styles/CreateModal.css';
 
-const CreateModalArticle = ({ open, onClose, onSubmit, loading }) => {
+const CreateModalArticle = ({ open, onClose, onSubmit, loading, artifacts: artifactsProp }) => {
   const dispatch = useDispatch();
-  const { artifacts = [] } = useSelector((state) => state.artifacts || {});
+  const { artifacts: artifactsRedux = [] } = useSelector((state) => state.artifacts || {});
   const { currentUser } = useSelector(state => state.user);
+  
+  // Use props artifacts if available, otherwise use Redux artifacts
+  const artifacts = artifactsProp && artifactsProp.length > 0 ? artifactsProp : artifactsRedux;
+
+  // Debug artifacts
+  useEffect(() => {
+    if (open) {
+      console.log('CreateModal - artifacts from props:', artifactsProp);
+      console.log('CreateModal - artifacts from Redux:', artifactsRedux);
+      console.log('CreateModal - final artifacts used:', artifacts);
+    }
+  }, [open, artifactsProp, artifactsRedux, artifacts]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -26,7 +38,12 @@ const CreateModalArticle = ({ open, onClose, onSubmit, loading }) => {
       if (!currentUser) {
         dispatch(fetchCurrentUser());
       }
-      dispatch(fetchArtifactsThunk());
+      // Fetch artifacts with high page size and details
+      dispatch(fetchArtifactsThunk({ 
+        page: 1, 
+        pageSize: 1000,
+        includeDetails: true 
+      }));
     }
   }, [open, currentUser, dispatch]);
 

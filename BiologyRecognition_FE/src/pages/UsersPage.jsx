@@ -1,63 +1,152 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { fetchUsersThunk, deleteUserThunk } from '../redux/thunks/userThunks';
+import { fetchUsersThunk, deleteUserThunk, updateUserThunk } from '../redux/thunks/userThunks';
 import { clearUserError } from '../redux/actions/userActions';
 import { formatDate } from '../utils/dateUtils';
+import ViewDetailUser from '../components/ViewDetailUser';
+import CreateModalUser from '../components/CreateModalUser';
+import EditModalUser from '../components/EditModalUser';
 import '../styles/UsersPage.css';
 
 const UsersPage = () => {
   const dispatch = useDispatch();
-  const { users = [], loadingUsers, usersError, deleting } = useSelector((state) => state.user || {});
+  const { users = [], loadingUsers, usersError, deleting, creating, updating } = useSelector((state) => state.user || {});
 
-  const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserInfo, setSelectedUserInfo] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editUserInfo, setEditUserInfo] = useState(null);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  // Fetch users when component mounts
+  // Debounce search term
   useEffect(() => {
-    dispatch(fetchUsersThunk());
-  }, [dispatch]);
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
 
-  // Update filtered users when users or filters change
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch users when component mounts or filters change
   useEffect(() => {
-    let filtered = Array.isArray(users) ? users : [];
+    const fetchUsers = async () => {
+      try {
+        const params = {
+          page: currentPage,
+          pageSize: usersPerPage,
+        };
+        
+        // Add search term if exists
+        if (debouncedSearchTerm.trim()) {
+          params.search = debouncedSearchTerm.trim();
+        }
+        
+        // Add status filter if not 'all'
+        if (statusFilter !== 'all') {
+          params.isActive = statusFilter === 'active';
+        }
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.phone?.includes(searchTerm)
-      );
-    }
+        const response = await dispatch(fetchUsersThunk(params));
+        
+        // Update pagination info if response has pagination data
+        if (response && response.totalCount !== undefined) {
+          setTotalUsers(response.totalCount);
+          setTotalPages(Math.ceil(response.totalCount / usersPerPage));
+        } else {
+          // Fallback for simple array response
+          setTotalUsers(users.length);
+          setTotalPages(Math.ceil(users.length / usersPerPage));
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
 
-    // Status filter
-    if (statusFilter !== 'all') {
-      const isActiveFilter = statusFilter === 'active';
-      filtered = filtered.filter(user => user?.isActive === isActiveFilter);
-    }
+    fetchUsers();
+  }, [dispatch, currentPage, usersPerPage, debouncedSearchTerm, statusFilter]);
 
-    setFilteredUsers(filtered);
+  // Reset to first page when search term or filter changes
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, users]);
+  }, [debouncedSearchTerm, statusFilter]);
 
   // Stats calculation with defensive check
   const stats = {
-    total: (Array.isArray(users) ? users : []).length,
+    total: totalUsers || (Array.isArray(users) ? users : []).length,
     active: (Array.isArray(users) ? users : []).filter(u => u?.isActive === true).length,
     inactive: (Array.isArray(users) ? users : []).filter(u => u?.isActive === false).length
   };
 
-  // Pagination
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  // Helper function to get role name
+  const getRoleName = (roleId) => {
+    switch (roleId) {
+      case 1:
+        return 'Admin';
+      case 3:
+        return 'Lecturer';
+      default:
+        return 'Unknown';
+    }
+  };
 
   // Helper functions
+  const handleViewUser = (userId) => {
+    console.log('Opening user detail modal for user ID:', userId); // Debug log
+    // Find user in current users array
+    const userInfo = users.find(user => (user.userAccountId || user.id) === userId);
+    console.log('Found user info:', userInfo); // Debug log
+    
+    setSelectedUserId(userId);
+    setSelectedUserInfo(userInfo);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    console.log('Closing user detail modal'); // Debug log
+    setShowDetailModal(false);
+    setSelectedUserId(null);
+    setSelectedUserInfo(null);
+  };
+
+  const handleCreateUser = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    // Refresh danh sách sau khi đóng modal để đảm bảo hiển thị user mới
+    setTimeout(() => {
+      handleRefresh();
+    }, 500);
+  };
+
+  const handleEditUser = (userId) => {
+    console.log('Opening edit modal for user ID:', userId); // Debug log
+    // Find user in current users array
+    const userInfo = users.find(user => (user.userAccountId || user.id) === userId);
+    console.log('Found user info for edit:', userInfo); // Debug log
+    
+    setEditUserInfo(userInfo);
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditUserInfo(null);
+    // Refresh danh sách sau khi đóng modal để đảm bảo hiển thị thay đổi
+    setTimeout(() => {
+      handleRefresh();
+    }, 500);
+  };
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
@@ -70,7 +159,20 @@ const UsersPage = () => {
   };
 
   const handleRefresh = () => {
-    dispatch(fetchUsersThunk());
+    const params = {
+      page: currentPage,
+      pageSize: usersPerPage,
+    };
+    
+    if (debouncedSearchTerm.trim()) {
+      params.search = debouncedSearchTerm.trim();
+    }
+    
+    if (statusFilter !== 'all') {
+      params.isActive = statusFilter === 'active';
+    }
+
+    dispatch(fetchUsersThunk(params));
   };
 
   // Clear error when component unmounts
@@ -148,6 +250,14 @@ const UsersPage = () => {
               <h2 className="controls-title">Danh sách người dùng</h2>
               <div className="controls-actions">
                 <button 
+                  className="users-btn users-btn-primary" 
+                  onClick={handleCreateUser}
+                  disabled={creating}
+                >
+                  <i className={`fas ${creating ? 'fa-spinner fa-spin' : 'fa-plus'}`}></i>
+                  Tạo tài khoản
+                </button>
+                <button 
                   className="users-btn users-btn-outline" 
                   onClick={handleRefresh}
                   disabled={loadingUsers}
@@ -208,7 +318,7 @@ const UsersPage = () => {
                 <i className="fas fa-spinner fa-spin"></i>
                 <p>Đang tải danh sách người dùng...</p>
               </div>
-            ) : currentUsers.length > 0 ? (
+            ) : users.length > 0 ? (
               <>
                 <table className="users-table">
                   <thead>
@@ -216,6 +326,7 @@ const UsersPage = () => {
                       <th>Tên đầy đủ</th>
                       <th>Email</th>
                       <th>Số điện thoại</th>
+                      <th>Vai trò</th>
                       <th>Ngày tạo</th>
                       <th>Ngày chỉnh sửa</th>
                       <th>Trạng thái tài khoản</th>
@@ -223,7 +334,7 @@ const UsersPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentUsers.map(user => (
+                    {users.map(user => (
                       <tr key={user.userAccountId || user.id}>
                         <td>
                           <div className="user-name-cell">
@@ -243,6 +354,14 @@ const UsersPage = () => {
                           <div className="contact-cell">
                             <i className="fas fa-phone contact-icon"></i>
                             <span>{user.phone || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="role-cell">
+                            <i className={`fas ${user.roleId === 1 ? 'fa-user-shield' : 'fa-user-graduate'} role-icon`}></i>
+                            <span className={`role-badge ${user.roleId === 1 ? 'admin' : 'lecture'}`}>
+                              {getRoleName(user.roleId)}
+                            </span>
                           </div>
                         </td>
                         <td>
@@ -268,14 +387,17 @@ const UsersPage = () => {
                             <button
                               className="action-btn view"
                               title="Xem chi tiết"
+                              onClick={() => handleViewUser(user.userAccountId || user.id)}
                             >
                               <i className="fas fa-eye"></i>
                             </button>
                             <button
                               className="action-btn edit"
                               title="Chỉnh sửa"
+                              onClick={() => handleEditUser(user.userAccountId || user.id)}
+                              disabled={updating}
                             >
-                              <i className="fas fa-edit"></i>
+                              <i className={`fas ${updating ? 'fa-spinner fa-spin' : 'fa-edit'}`}></i>
                             </button>
                             <button
                               className="action-btn delete"
@@ -296,7 +418,7 @@ const UsersPage = () => {
                 {totalPages > 1 && (
                   <div className="users-pagination">
                     <div className="pagination-info">
-                      Hiển thị {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} của {filteredUsers.length} người dùng
+                      Hiển thị trang {currentPage} của {totalPages} ({totalUsers} người dùng)
                     </div>
                     <div className="pagination-controls">
                       <button
@@ -359,6 +481,32 @@ const UsersPage = () => {
             )}
           </section>
         </main>
+
+        {/* View Detail Modal */}
+        {showDetailModal && selectedUserId && (
+          <ViewDetailUser
+            userId={selectedUserId}
+            userInfo={selectedUserInfo}
+            onClose={handleCloseDetailModal}
+          />
+        )}
+
+        {/* Create User Modal */}
+        {showCreateModal && (
+          <CreateModalUser
+            open={showCreateModal}
+            onClose={handleCloseCreateModal}
+          />
+        )}
+
+        {/* Edit User Modal */}
+        {showEditModal && editUserInfo && (
+          <EditModalUser
+            open={showEditModal}
+            onClose={handleCloseEditModal}
+            userInfo={editUserInfo}
+          />
+        )}
       </div>
     </>
   );
