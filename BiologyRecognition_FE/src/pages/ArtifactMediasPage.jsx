@@ -435,7 +435,7 @@ const ArtifactMediasPage = () => {
                 <thead>
                   <tr>
                     <th>Tên mẫu vật</th>
-                    <th>Loại mẫu vật</th>
+                   
                    
                     <th>Thao tác</th>
                   </tr>
@@ -445,7 +445,7 @@ const ArtifactMediasPage = () => {
                     displayedArtifactMedia.map(media => (
                       <tr key={media.artifactMediaId}>
                         <td>{highlightText(media.artifactName, searchTerm)}</td>
-                        <td>{highlightText(getArtifactName(media.artifactId), searchTerm)}</td>
+                       
                      
                         <td>
                           <button 
