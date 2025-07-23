@@ -2,10 +2,12 @@ import React, { useRef, useState } from 'react';
 import '../styles/AdminPage.css'; 
 import Header from '../components/Header.jsx';
 import Navbar from '../components/Navbar.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
+  const location = useLocation();
   // Lấy trạng thái collapsed từ localStorage, mặc định là false
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('navbarCollapsed');
@@ -23,6 +25,17 @@ const AdminPage = () => {
   const artifactTypesRef = useRef(null);
   const artifactImagesRef = useRef(null);
   const usersRef = useRef(null);
+
+  // Hiển thị toast khi vừa login thành công
+  React.useEffect(() => {
+    // Chỉ hiện toast nếu có state và chưa hiện lần nào cho key này
+    const toastFlag = '__toast_shown_' + location.key;
+    if (location.state && location.state.showLoginToast && !window[toastFlag]) {
+      window[toastFlag] = true;
+      window.history.replaceState({}, document.title);
+      toast.success('Đăng nhập thành công!');
+    }
+  }, [location.state]);
 
   const handleSectionChange = (section) => {
     setActiveSection(section);
@@ -135,13 +148,6 @@ const AdminPage = () => {
                     <div>
                       <div className="stat-value">8</div>
                       <div className="stat-label">Lịch sử nhận diện</div>
-                    </div>
-                  </div>
-                  <div className="stat-card" onClick={() => navigate('/users')} style={{ cursor: 'pointer' }}>
-                    <div className="stat-icon pending-users-icon"><i className="fas fa-user-clock"></i></div>
-                    <div>
-                      <div className="stat-value">3</div>
-                      <div className="stat-label">Người dùng chờ cấp quyền</div>
                     </div>
                   </div>
                 </div>
@@ -316,23 +322,7 @@ const AdminPage = () => {
                     </div>
                   </div>
 
-                  <div className="content-card">
-                    <div className="card-header">
-                      <div className="card-title">
-                        <div className="card-icon pending-users-icon">
-                          <i className="fas fa-user-shield"></i>
-                        </div>
-                        Quản lí người dùng & cấp quyền
-                      </div>
-                    </div>
-                    <p>Quản lý tài khoản người dùng, phân quyền truy cập và phê duyệt các tài khoản đang chờ cấp quyền.</p>
-                    <div className="action-buttons">
-                      <button className="btn btn-primary" onClick={() => navigate('/users')}>
-                        <i className="fas fa-arrow-right"></i>
-                        Quản lí
-                      </button>
-                    </div>
-                  </div>
+                 
                 </div>
               </div>
             )}

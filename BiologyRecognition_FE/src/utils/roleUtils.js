@@ -5,24 +5,23 @@
  * @param {number} roleId - User's role ID
  * @param {function} navigate - React Router navigate function
  */
-export const navigateByRole = (roleId, navigate) => {
+export const navigateByRole = (roleId, navigate, options = {}) => {
     console.log('Navigating by role:', roleId);
-    
     switch (roleId) {
         case 1:
             // Role 1: User thường
             console.log('Navigating to /users for role 1');
-            navigate('/users', { replace: true });
+            navigate('/users', { replace: true, ...options });
             break;
         case 3:
             // Role 3: Admin
             console.log('Navigating to /admin for role 3');
-            navigate('/admin', { replace: true });
+            navigate('/admin', { replace: true, ...options });
             break;
         default:
             // Các role khác hoặc chưa được cấp quyền -> chuyển đến trang chờ
             console.log('Navigating to waiting permission page for role:', roleId);
-            navigate('/waiting-permission', { replace: true });
+            navigate('/waiting-permission', { replace: true, ...options });
             break;
     }
 };

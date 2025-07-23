@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchUsersThunk, deleteUserThunk, updateUserThunk } from '../redux/thunks/userThunks';
@@ -10,6 +11,16 @@ import EditModalUser from '../components/EditModalUser';
 import '../styles/UsersPage.css';
 
 const UsersPage = () => {
+  const location = useLocation();
+  // Hiển thị toast khi vừa login thành công (nếu chuyển hướng vào trang này)
+  useEffect(() => {
+    const toastFlag = '__toast_shown_' + location.key;
+    if (location.state && location.state.showLoginToast && !window[toastFlag]) {
+      window[toastFlag] = true;
+      window.history.replaceState({}, document.title);
+      toast.success('Đăng nhập thành công!');
+    }
+  }, [location.state, location.key]);
   const dispatch = useDispatch();
   const { users = [], loadingUsers, usersError, deleting, creating, updating } = useSelector((state) => state.user || {});
 

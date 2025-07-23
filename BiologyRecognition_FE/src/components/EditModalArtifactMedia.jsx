@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { fetchArtifactTypes } from '../redux/thunks/artifactTypeThunks';
+import { fetchArtifactsThunk } from '../redux/thunks/artifactThunks';
 import { uploadToCloudinary, uploadMediaToCloudinary } from '../services/cloudinaryService';
 import '../styles/EditModal.css';
 
 const EditModalArtifactMedia = ({ open, onClose, onSubmit, loading, artifactMedia }) => {
     const dispatch = useDispatch();
-    const { artifactTypes, loading: artifactTypesLoading } = useSelector(state => state.artifactTypes);
+    const { artifacts, loading: artifactsLoading } = useSelector(state => state.artifacts);
     
     const [form, setForm] = useState({
         artifactMediaId: '',
@@ -25,8 +25,7 @@ const EditModalArtifactMedia = ({ open, onClose, onSubmit, loading, artifactMedi
 
     useEffect(() => {
         if (open) {
-            // Force fetch all artifact types every time modal opens
-            dispatch(fetchArtifactTypes({ page: 1, pageSize: 100 }));
+            dispatch(fetchArtifactsThunk({ page: 1, pageSize: 100 }));
             if (artifactMedia) {
                 setForm({
                     artifactMediaId: artifactMedia.artifactMediaId || '',
@@ -36,7 +35,7 @@ const EditModalArtifactMedia = ({ open, onClose, onSubmit, loading, artifactMedi
                     description: artifactMedia.description || '',
                     fileName: ''
                 });
-                setIsEditing(false); // Reset to view mode when opening
+                setIsEditing(false);
                 setSelectedFile(null);
                 setPreviewUrl('');
                 setUploading(false);
@@ -109,16 +108,17 @@ const EditModalArtifactMedia = ({ open, onClose, onSubmit, loading, artifactMedi
             toast.error('Vui lòng chọn mẫu vật và có URL media!');
             return;
         }
-        
         if (isEditing) {
+            // Find artifactName from selected artifactId
+            const selectedArtifact = artifacts?.find(a => a.artifactId === parseInt(form.artifactId));
             const artifactMediaData = {
                 artifactMediaId: form.artifactMediaId,
                 artifactId: parseInt(form.artifactId),
+                artifactName: selectedArtifact ? selectedArtifact.artifactName : '',
                 type: form.type,
                 url: form.url,
                 description: form.description
             };
-
             onSubmit(artifactMediaData);
         }
     };
@@ -162,12 +162,12 @@ const EditModalArtifactMedia = ({ open, onClose, onSubmit, loading, artifactMedi
                             required
                         >
                             <option value="">-- Chọn mẫu vật --</option>
-                            {artifactTypesLoading ? (
+                            {artifactsLoading ? (
                                 <option value="">Đang tải...</option>
                             ) : (
-                                artifactTypes && artifactTypes.map(artifactType => (
-                                    <option key={artifactType.artifactTypeId} value={artifactType.artifactTypeId}>
-                                        {artifactType.name}
+                                artifacts && artifacts.map(artifact => (
+                                    <option key={artifact.artifactId} value={artifact.artifactId}>
+                                        {artifact.artifactName}
                                     </option>
                                 ))
                             )}

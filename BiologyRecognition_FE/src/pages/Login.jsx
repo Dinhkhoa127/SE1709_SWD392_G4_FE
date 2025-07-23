@@ -6,6 +6,7 @@ import { fetchCurrentUserSuccess } from '../redux/actions/userActions';
 import { navigateByRole, getDefaultRouteByRole } from '../utils/roleUtils';
 import '../styles/Login.css';
 import { loginAPI, loginGoogleAPI, getCurrentUserAPI } from '../redux/services/apiService';
+import { toast } from 'react-toastify';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -31,39 +32,27 @@ const Login = () => {
             if (token) {
                 setIsLoading(true);
                 try {
-                    console.log('Processing Google login with token:', token);
-                    
                     // Lưu token trước
                     localStorage.setItem('accessToken', token);
-                    
                     // Fetch thông tin user từ API
                     const userResponse = await getCurrentUserAPI();
                     const user = userResponse.data || userResponse;
-                    
-                    console.log('User data from API:', user);
-                    
                     if (user && user.userAccountId) {
                         // Lưu thông tin user vào localStorage
                         localStorage.setItem('currentUser', JSON.stringify(user));
-                        
                         // Lưu thông tin user vào Redux store
                         dispatch(fetchCurrentUserSuccess(user));
-                        
                         // Phân quyền dựa trên roleId
-                        console.log('User roleId:', user.roleId);
-                        
                         if (user.roleId) {
-                            navigateByRole(user.roleId, navigate);
+                            navigateByRole(user.roleId, navigate, { state: { showLoginToast: true } });
                         } else {
                             // Nếu không có roleId, mặc định về admin
-                            console.warn('No roleId found, defaulting to admin');
-                            navigate('/admin', { replace: true });
+                            navigate('/admin', { replace: true, state: { showLoginToast: true } });
                         }
                     } else {
                         setError('Không thể lấy thông tin người dùng từ server');
                     }
                 } catch (error) {
-                    console.error('Error processing Google callback:', error);
                     setError('Có lỗi xảy ra khi xử lý đăng nhập Google');
                 } finally {
                     setIsLoading(false);
@@ -94,18 +83,14 @@ const handleSubmit = async (e) => {
                 dispatch(fetchCurrentUserSuccess(response));
                 
                 // Phân quyền dựa trên roleId sử dụng utility function
-                navigateByRole(response.roleId, navigate);
+                navigateByRole(response.roleId, navigate, { state: { showLoginToast: true } });
                 
-                // Backup method nếu navigate không hoạt động
-                const defaultRoute = getDefaultRouteByRole(response.roleId);
-                setTimeout(() => {
-                    window.location.href = defaultRoute;
-                }, 100);
+                // ĐÃ BỎ: Backup method để giữ state toast khi chuyển trang
             } else {
                 setError('Đăng nhập thất bại - Thông tin không hợp lệ');
             }
         } catch (error) {
-            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+            setError('Thông tin tài khoản hoặc mật khẩu không hợp lệ.');
         } finally {
             setIsLoading(false);
         }

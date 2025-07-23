@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { fetchCurrentUser } from '../redux/thunks/userThunks';
-import { fetchArtifactTypes } from '../redux/thunks/artifactTypeThunks';
+import { fetchArtifactsThunk } from '../redux/thunks/artifactThunks';
 import { uploadToCloudinary, uploadMediaToCloudinary } from '../services/cloudinaryService';
 import '../styles/CreateModal.css';
 
 const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
     const dispatch = useDispatch();
     const { currentUser } = useSelector(state => state.user);
-    const { artifactTypes, loading: artifactTypesLoading } = useSelector(state => state.artifactTypes);
+    const { artifacts, loading: artifactsLoading } = useSelector(state => state.artifacts);
     
     const [form, setForm] = useState({
         artifactId: '',
@@ -24,17 +24,15 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    // Fetch current user and artifact types when modal opens
+    // Fetch current user and artifacts when modal opens
     useEffect(() => {
         if (open) {
-            // Chỉ fetch current user nếu chưa có trong Redux store
             if (!currentUser) {
                 dispatch(fetchCurrentUser());
             }
-            // Force fetch all artifact types every time modal opens
-            dispatch(fetchArtifactTypes({ page: 1, pageSize: 100 }));
+            dispatch(fetchArtifactsThunk({ page: 1, pageSize: 100 }));
         }
-    }, [open, dispatch]); // Loại bỏ currentUser từ dependencies để tránh vòng lặp
+    }, [open, dispatch]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -46,13 +44,11 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
             setSelectedFile(file);
             setUploading(true);
             setUploadProgress(0);
-            
             // Auto-fill file name if empty
             if (!form.fileName) {
                 const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
                 setForm({ ...form, fileName: fileNameWithoutExt });
             }
-            
             try {
                 // Create preview URL for images
                 if (file.type.startsWith('image/')) {
@@ -62,25 +58,19 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
                     };
                     reader.readAsDataURL(file);
                 }
-
                 // Upload to Cloudinary
                 toast.info('Đang tải file lên Cloudinary...');
-                
                 let uploadResult;
                 const customFileName = form.fileName || file.name.replace(/\.[^/.]+$/, "");
-                
                 if (file.type.startsWith('image/')) {
                     uploadResult = await uploadToCloudinary(file, customFileName);
                 } else {
                     uploadResult = await uploadMediaToCloudinary(file, customFileName);
                 }
-
                 // Set the Cloudinary URL to form
                 setForm({ ...form, url: uploadResult.url });
                 toast.success('Tải file lên thành công!');
-                
             } catch (error) {
-                console.error('Upload error:', error);
                 toast.error('Lỗi khi tải file lên Cloudinary. Vui lòng thử lại!');
                 setSelectedFile(null);
                 setPreviewUrl('');
@@ -91,28 +81,27 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
         }
     };
 
+    // Add handleSubmit definition
     const handleSubmit = (e) => {
         e.preventDefault();
-        
         if (!currentUser) {
             toast.error('Không thể lấy thông tin người dùng hiện tại!');
             return;
         }
-
         if (!form.artifactId || !form.url || !form.fileName.trim()) {
             toast.error('Vui lòng điền đầy đủ thông tin bắt buộc!');
             return;
         }
-
+        // Find artifactName from selected artifactId
+        const selectedArtifact = artifacts?.find(a => a.artifactId === parseInt(form.artifactId));
         const artifactMediaData = {
             artifactId: parseInt(form.artifactId),
+            artifactName: selectedArtifact ? selectedArtifact.artifactName : '',
             type: form.type,
-            url: form.url, // Now contains Cloudinary URL
+            url: form.url,
             description: form.description
         };
-
         onSubmit(artifactMediaData);
-        
         setForm({
             artifactId: '',
             type: 'IMAGE',
@@ -124,8 +113,6 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
         setPreviewUrl('');
         setUploading(false);
         setUploadProgress(0);
-        setSelectedFile(null);
-        setPreviewUrl('');
     };
 
     const handleClose = () => {
@@ -152,20 +139,20 @@ const CreateModalArtifactMedia = ({ open, onClose, onSubmit, loading }) => {
                 </button>
                 <form className="create-modal-form" onSubmit={handleSubmit}>
                     <div className="form-group full-width">
-                        <label>Loại mẫu vật *</label>
+                        <label>Mẫu vật *</label>
                         <select
                             name="artifactId"
                             value={form.artifactId}
                             onChange={handleChange}
                             required
                         >
-                            <option value="">-- Chọn loại mẫu vật --</option>
-                            {artifactTypesLoading ? (
+                            <option value="">-- Chọn mẫu vật --</option>
+                            {artifactsLoading ? (
                                 <option value="">Đang tải...</option>
-                            ) : artifactTypes && artifactTypes.length > 0 ? (
-                                artifactTypes.map(artifactType => (
-                                    <option key={artifactType.artifactTypeId} value={artifactType.artifactTypeId}>
-                                        {artifactType.name}
+                            ) : artifacts && artifacts.length > 0 ? (
+                                artifacts.map(artifact => (
+                                    <option key={artifact.artifactId} value={artifact.artifactId}>
+                                        {artifact.artifactName}
                                     </option>
                                 ))
                             ) : (
